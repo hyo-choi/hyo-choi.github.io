@@ -1,0 +1,43 @@
+<!-- Target for toggling the sidebar `.sidebar-checkbox` is for regular
+     styles, `#sidebar-checkbox` for behavior. -->
+<input type="checkbox" class="sidebar-checkbox" id="sidebar-checkbox">
+
+<!-- Toggleable sidebar -->
+<div class="sidebar" id="sidebar">
+
+  <nav class="sidebar-nav">
+    <a class="sidebar-nav-item{% if page.title == 'Home' %} active{% endif %}" href="{{ '/' | absolute_url }}">Home</a>
+
+    {% comment %}
+    The code below dynamically generates a sidebar nav of pages with
+    `layout: page` in the front-matter. See readme for usage.
+    {% endcomment %}
+
+    <div class="site-category">
+      <li style="list-style:none;" class="sidebar-nav-item"><a href="/PROJECTS">#PROJECTS</a>
+        <ul style="padding-left: 15px;">
+          <li style="list-style:none;"><a href="/PROJECTS/to-do-list">to-do list</a></li>
+        </ul>
+      </li>
+
+      <li style="list-style:none;" class="sidebar-nav-item"><a href="/STUDY">#STUDY</a>
+        <ul style="padding-left: 15px;">
+          <li style="list-style:none;"><a href="/STUDY/CPP">C++</a></li>
+          <li style="list-style:none;"><a href="/STUDY/HTML">HTML</a></li>
+          <li style="list-style:none;"><a href="/STUDY/CSS">CSS</a></li>
+          <li style="list-style:none;"><a href="/STUDY/Javascript">Javascript</a></li>
+          <li style="list-style:none;"><a href="/STUDY/Unity">Unity</a></li>
+          <li style="list-style:none;"><a href="/STUDY/Etc">Etc</a></li>
+        </ul>
+      </li>
+    </div>
+
+    <a class="sidebar-nav-item" href="https://github.com/hyo-choi" target="_blank">GitHub</a>
+  </nav>
+
+  <div class="sidebar-item">
+    <p>
+      &copy; {{ site.time | date: '%Y' }}. All rights reserved.
+    </p>
+  </div>
+</div>

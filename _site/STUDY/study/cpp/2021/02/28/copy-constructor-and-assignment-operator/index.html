@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en-us">
+
+  <head>
+  <link href="http://gmpg.org/xfn/11" rel="profile">
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+
+  <title>
+    
+    [C++] 복사 생성자와 복사 대입 연산자 &middot; hyo-choi
+    
+  </title>
+
+  
+  <link rel="canonical" href="https://hyo-choi.github.io/study/study/cpp/2021/02/28/copy-constructor-and-assignment-operator/">
+  
+  <link rel="preconnect" href="https://fonts.gstatic.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://hyo-choi.github.io/public/css/poole.css">
+  <link rel="stylesheet" href="https://hyo-choi.github.io/public/css/syntax.css">
+  <link rel="stylesheet" href="https://hyo-choi.github.io/public/css/lanyon.css">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=PT+Serif:400,400italic,700%7CPT+Sans:400">
+
+  <link rel="apple-touch-icon-precomposed" sizes="144x144"
+    href="https://hyo-choi.github.io/public/apple-touch-icon-precomposed.png">
+  <link rel="shortcut icon" href="https://hyo-choi.github.io/public/favicon.ico">
+
+  <link rel="alternate" type="application/rss+xml" title="RSS" href="https://hyo-choi.github.io/atom.xml">
+
+  
+</head>
+
+
+  <body class="theme-base-0d sidebar-overlay">
+
+    <!-- Target for toggling the sidebar `.sidebar-checkbox` is for regular
+     styles, `#sidebar-checkbox` for behavior. -->
+<input type="checkbox" class="sidebar-checkbox" id="sidebar-checkbox">
+
+<!-- Toggleable sidebar -->
+<div class="sidebar" id="sidebar">
+
+  <nav class="sidebar-nav">
+    <a class="sidebar-nav-item" href="https://hyo-choi.github.io/">Home</a>
+
+    
+
+    <div class="site-category">
+      <li style="list-style:none;" class="sidebar-nav-item"><a href="/PROJECTS">#PROJECTS</a>
+        <ul style="padding-left: 15px;">
+          <li style="list-style:none;"><a href="/PROJECTS/to-do-list">to-do list</a></li>
+        </ul>
+      </li>
+
+      <li style="list-style:none;" class="sidebar-nav-item"><a href="/STUDY">#STUDY</a>
+        <ul style="padding-left: 15px;">
+          <li style="list-style:none;"><a href="/STUDY/CPP">C++</a></li>
+          <li style="list-style:none;"><a href="/STUDY/HTML">HTML</a></li>
+          <li style="list-style:none;"><a href="/STUDY/CSS">CSS</a></li>
+          <li style="list-style:none;"><a href="/STUDY/Javascript">Javascript</a></li>
+          <li style="list-style:none;"><a href="/STUDY/Unity">Unity</a></li>
+          <li style="list-style:none;"><a href="/STUDY/Etc">Etc</a></li>
+        </ul>
+      </li>
+    </div>
+
+    <a class="sidebar-nav-item" href="https://github.com/hyo-choi" target="_blank">GitHub</a>
+  </nav>
+
+  <div class="sidebar-item">
+    <p>
+      &copy; 2021. All rights reserved.
+    </p>
+  </div>
+</div>
+
+
+    <!-- Wrap is the content to shift when toggling the sidebar. We wrap the
+         content to avoid any CSS collisions with our real content. -->
+    <div class="wrap">
+      <div class="masthead">
+        <div class="container">
+          <h3 class="masthead-title">
+            <a href="/" title="Home">hyo-choi</a>
+            <small>공부하는 블로그</small>
+          </h3>
+        </div>
+      </div>
+
+      <div class="container content">
+        <div class="post">
+  <h1 class="post-title">[C++] 복사 생성자와 복사 대입 연산자</h1>
+  <span class="post-date">28 Feb 2021</span>
+  <p>💡 <strong>기본적인 개념, 사용법에 대한 글이 아닙니다. Effective C++을 읽으며 기억해둘 만한 부분을 정리한 글입니다. 개념을 익힌 뒤 읽어보시면 좋습니다.</strong></p>
+
+<p><br /></p>
+<ul>
+  <li>컴파일러는 경우에 따라 클래스에 대해 기본 생성자, 복사 생성자, 복사 대입 연산자, 소멸자를 암시적으로 만들 수 있다.</li>
+  <li>어떤 시그니처를 가졌든 클래스 내부에 생성자를 직접 선언하면 컴파일러는 기본 생성자를 만들지 않는다. 따라서 기본 생성자가 필요 없다면 원하는 인자를 받는 생성자를 직접 만들어주기만 하면 된다.</li>
+  <li>컴파일러가 암시적으로 만들어내는 복사 생성자 및 복사 대입 연산자는 <strong>아래</strong>와 같은 경우 컴파일을 거부한다. 단순히 일괄 복사(대입) 처리 하는 것만으로는 해결할 수 없는 데이터 멤버가 있을 때, 암시적으로 만들어지는 복사 대입 연산자가 이런 경우의 처리 방법까지 판단하여 작업해야 할 이유가 없다. 따라서 해당 데이터 멤버에 대한 처리를 보류하고 컴파일 오류를 보여주는 것이라 보면 된다. 이런 경우 직접 복사 대입 연산자를 정의하고 사용해야 한다.</li>
+</ul>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">class</span> <span class="nc">NamedObject</span> <span class="p">{</span>
+<span class="nl">public:</span>
+    <span class="n">NamedObject</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="o">&amp;</span> <span class="n">name</span><span class="p">,</span> <span class="k">const</span> <span class="kt">int</span><span class="o">&amp;</span> <span class="n">value</span><span class="p">);</span>
+    <span class="p">...</span>
+<span class="nl">private:</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="o">&amp;</span> <span class="n">nameValue</span><span class="p">;</span> <span class="c1">// 참조자의 참조 대상은 한 번 정해지면 바꿀 수 없다.</span>
+    <span class="k">const</span> <span class="kt">int</span> <span class="n">objectValue</span><span class="p">;</span> <span class="c1">// 상수 멤버의 값을 변경할 수 없다.</span>
+<span class="p">};</span>
+</code></pre></div></div>
+
+<ul>
+  <li>
+    <p>복사 대입 연산자를 private으로 선언한 기본 클래스로부터 상속받은 클래스의 경우, 파생 클래스는 암시적 복사 대입 연산자를 가질 수 없다. 파생 클래스가 기본 클래스의 복사 대입 연산자를 호출할 권한이 없기 때문이다.</p>
+  </li>
+  <li>
+    <p>파생 클래스의 복사 생성자에서는 반드시 기본 클래스의 복사 생성자도 호출해준다. 주어진 객체의 모든 데이터 멤버 및 모든 기본 클래스 부분을 빠뜨리지 않고 복사해야 한다. 같은 이유로, 파생 클래스의 복사 대입 연산자에서는 반드시 기본 클래스의 복사 대입 연산자도 호출해준다.</p>
+  </li>
+</ul>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">class</span> <span class="nc">DerivedClass</span> <span class="o">:</span> <span class="k">public</span> <span class="n">BaseClass</span> <span class="p">{</span>
+<span class="nl">public:</span>
+    <span class="p">...</span>
+    <span class="n">DerivedClass</span><span class="o">&amp;</span> <span class="k">operator</span><span class="o">=</span><span class="p">(</span><span class="k">const</span> <span class="n">DerivedClass</span><span class="o">&amp;</span> <span class="n">rhs</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="k">if</span> <span class="p">(</span><span class="k">this</span> <span class="o">!=</span> <span class="o">&amp;</span><span class="n">rhs</span><span class="p">)</span>
+        <span class="p">{</span>
+            <span class="n">BaseClass</span><span class="o">::</span><span class="k">operator</span><span class="o">=</span><span class="p">(</span><span class="n">rhs</span><span class="p">);</span>
+                <span class="c1">// 기본 클래스 부분에 대한 대입 연산자를 반드시 호출한다.</span>
+            <span class="p">...</span> <span class="c1">// 이하 파생 클래스의 데이터 멤버 대입</span>
+        <span class="p">}</span>
+        <span class="k">return</span> <span class="o">*</span><span class="k">this</span><span class="p">;</span>
+    <span class="p">}</span>
+    <span class="p">...</span>
+<span class="p">};</span>
+</code></pre></div></div>
+
+<ul>
+  <li>복사 생성자와 복사 대입 연산자가 서로를 사용하지 않도록 한다.
+    <ul>
+      <li><strong>복사 대입 연산자에서 복사 생성자를 호출하는 경우</strong>: 애초에 말도 안 되는 방식이니 상상도 하지 말자.</li>
+      <li><strong>복사 생성자에서 복사 대입 연산자를 호출하는 경우</strong>: 생성자의 역할은 새로 만들어진 객체를 초기화하는 것, 대입 연산자의 역할은 ‘이미’ 초기화가 끝난 객체에 값을 주는 것. 초기화 되지 않은 객체에 값을 대입하는 연산자를 사용하지 않아야 한다.</li>
+      <li>단, 복사 생성자와 복사 대입 연산자의 코드 본문이 비슷하다면 겹치는 부분을 별도의 private 멤버 함수로 분리해 만든 뒤 해당 함수를 호출하게 만든다. 이 방법은 안전할 뿐 아니라 검증된 방법이므로 코드 중복 제거를 위해 사용해봄직하다.</li>
+    </ul>
+  </li>
+  <li>복사 대입 연산자가 <strong>자기대입에 대한 처리 및 예외에 대한 안전성</strong>을 확보할 수 있도록 하는 방법이 있다. 자기대입은 흔히 일어나는 일이 아니므로 operator=가 호출될 때마다 일치성 검사를 수행하는 것 또한 비효율적인 동작이 된다. 따라서 아래처럼 operator=를 작성하면 자기대입에 대해 특별한 처리를 하지 않아도 되고, 예외 안전성까지 확보할 수 있다.</li>
+</ul>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// (1)</span>
+<span class="n">DerivedClass</span><span class="o">&amp;</span> <span class="n">DerivedClass</span><span class="o">::</span><span class="k">operator</span><span class="o">=</span><span class="p">(</span><span class="k">const</span> <span class="n">DerivedClass</span> <span class="o">&amp;</span><span class="n">rhs</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="n">BaseClass</span> <span class="o">*</span><span class="n">pOrig</span> <span class="o">=</span> <span class="n">p</span><span class="p">;</span>      <span class="c1">// 원본 p의 포인터를 저장해둔다.</span>
+    <span class="n">p</span> <span class="o">=</span> <span class="k">new</span> <span class="n">BaseClass</span><span class="p">(</span><span class="o">*</span><span class="n">rhs</span><span class="p">.</span><span class="n">p</span><span class="p">);</span> <span class="c1">// rhs.p를 통해 BaseClass의 복사 생성자를 부른다.</span>
+                                <span class="c1">// new에서 예외가 발생해도 원본 p는 무사하다.</span>
+    <span class="k">delete</span> <span class="n">pOrig</span><span class="p">;</span>
+
+    <span class="k">return</span> <span class="o">*</span><span class="k">this</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="c1">// (2) 복사 후 맞바꾸기 방법</span>
+<span class="k">class</span> <span class="nc">Widget</span> <span class="p">{</span>
+    <span class="p">...</span>
+    <span class="kt">void</span> <span class="n">swap</span><span class="p">(</span><span class="n">Widget</span><span class="o">&amp;</span> <span class="n">rhs</span><span class="p">);</span> <span class="c1">// *this의 데이터와 rhs의 데이터를 맞바꾸는 함수</span>
+    <span class="p">...</span>
+<span class="p">}</span>
+
+<span class="n">Widget</span><span class="o">&amp;</span> <span class="n">Widget</span><span class="o">::</span><span class="k">operator</span><span class="o">=</span><span class="p">(</span><span class="k">const</span> <span class="n">Widget</span><span class="o">&amp;</span> <span class="n">rhs</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="n">Widget</span> <span class="n">temp</span><span class="p">(</span><span class="n">rhs</span><span class="p">);</span>  <span class="c1">// rhs의 데이터에 대한 사본을 만든다.</span>
+    
+    <span class="n">swap</span><span class="p">(</span><span class="n">temp</span><span class="p">);</span>        <span class="c1">// Widget::swap 함수를 통해 데이터를 바꾼다.</span>
+                        <span class="c1">// temp는 지역 객체이므로 함수가 끝날 때 자동 소멸된다.</span>
+    <span class="k">return</span> <span class="o">*</span><span class="k">this</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p><br /></p>
+<h3 id="reference">Reference</h3>
+
+<ul>
+  <li>스콧 마이어스 지음, 곽용재 옮김, “Effective C++,” 제3판.
+    <ul>
+      <li>항목 5: C++가 은근슬쩍 만들어 호출해 버리는 함수들에 촉각을 세우자, 81.</li>
+      <li>항목 11: operator=에서는 자기대입에 대한 처리가 빠지지 않도록 하자, 106.</li>
+      <li>항목 12: 객체의 모든 부분을 빠짐없이 복사하자, 111.</li>
+    </ul>
+  </li>
+</ul>
+
+</div>
+
+
+<div class="related">
+  <h2>Related posts</h2>
+  <ul class="related-posts">
+    
+    <li>
+      <h3>
+        <a href="/study/study/cpp/2021/03/08/CPP-RAII-class/">
+          [C++] 자원 관리 클래스
+          <small>08 Mar 2021</small>
+        </a>
+      </h3>
+    </li>
+    
+    <li>
+      <h3>
+        <a href="/study/study/unity/2021/03/04/how-to-keep-BGM-and-UI/">
+          [Unity] 씬 전환시 BGM과 UI 유지하기
+          <small>04 Mar 2021</small>
+        </a>
+      </h3>
+    </li>
+    
+    <li>
+      <h3>
+        <a href="/study/study/css/2021/03/04/linear-gradient-and-body-problem/">
+          [CSS] linear-gradient와 body 적용시 문제 해결
+          <small>04 Mar 2021</small>
+        </a>
+      </h3>
+    </li>
+    
+  </ul>
+</div>
+
+
+      </div>
+    </div>
+
+    <label for="sidebar-checkbox" class="sidebar-toggle"></label>
+
+    <script src='/public/js/script.js'></script>
+  </body>
+</html>

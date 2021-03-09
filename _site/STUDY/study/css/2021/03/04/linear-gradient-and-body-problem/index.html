@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en-us">
+
+  <head>
+  <link href="http://gmpg.org/xfn/11" rel="profile">
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+
+  <title>
+    
+    [CSS] linear-gradient와 body 적용시 문제 해결 &middot; hyo-choi
+    
+  </title>
+
+  
+  <link rel="canonical" href="https://hyo-choi.github.io/study/study/css/2021/03/04/linear-gradient-and-body-problem/">
+  
+  <link rel="preconnect" href="https://fonts.gstatic.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://hyo-choi.github.io/public/css/poole.css">
+  <link rel="stylesheet" href="https://hyo-choi.github.io/public/css/syntax.css">
+  <link rel="stylesheet" href="https://hyo-choi.github.io/public/css/lanyon.css">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=PT+Serif:400,400italic,700%7CPT+Sans:400">
+
+  <link rel="apple-touch-icon-precomposed" sizes="144x144"
+    href="https://hyo-choi.github.io/public/apple-touch-icon-precomposed.png">
+  <link rel="shortcut icon" href="https://hyo-choi.github.io/public/favicon.ico">
+
+  <link rel="alternate" type="application/rss+xml" title="RSS" href="https://hyo-choi.github.io/atom.xml">
+
+  
+</head>
+
+
+  <body class="theme-base-0d sidebar-overlay">
+
+    <!-- Target for toggling the sidebar `.sidebar-checkbox` is for regular
+     styles, `#sidebar-checkbox` for behavior. -->
+<input type="checkbox" class="sidebar-checkbox" id="sidebar-checkbox">
+
+<!-- Toggleable sidebar -->
+<div class="sidebar" id="sidebar">
+
+  <nav class="sidebar-nav">
+    <a class="sidebar-nav-item" href="https://hyo-choi.github.io/">Home</a>
+
+    
+
+    <div class="site-category">
+      <li style="list-style:none;" class="sidebar-nav-item"><a href="/PROJECTS">#PROJECTS</a>
+        <ul style="padding-left: 15px;">
+          <li style="list-style:none;"><a href="/PROJECTS/to-do-list">to-do list</a></li>
+        </ul>
+      </li>
+
+      <li style="list-style:none;" class="sidebar-nav-item"><a href="/STUDY">#STUDY</a>
+        <ul style="padding-left: 15px;">
+          <li style="list-style:none;"><a href="/STUDY/CPP">C++</a></li>
+          <li style="list-style:none;"><a href="/STUDY/HTML">HTML</a></li>
+          <li style="list-style:none;"><a href="/STUDY/CSS">CSS</a></li>
+          <li style="list-style:none;"><a href="/STUDY/Javascript">Javascript</a></li>
+          <li style="list-style:none;"><a href="/STUDY/Unity">Unity</a></li>
+          <li style="list-style:none;"><a href="/STUDY/Etc">Etc</a></li>
+        </ul>
+      </li>
+    </div>
+
+    <a class="sidebar-nav-item" href="https://github.com/hyo-choi" target="_blank">GitHub</a>
+  </nav>
+
+  <div class="sidebar-item">
+    <p>
+      &copy; 2021. All rights reserved.
+    </p>
+  </div>
+</div>
+
+
+    <!-- Wrap is the content to shift when toggling the sidebar. We wrap the
+         content to avoid any CSS collisions with our real content. -->
+    <div class="wrap">
+      <div class="masthead">
+        <div class="container">
+          <h3 class="masthead-title">
+            <a href="/" title="Home">hyo-choi</a>
+            <small>공부하는 블로그</small>
+          </h3>
+        </div>
+      </div>
+
+      <div class="container content">
+        <div class="post">
+  <h1 class="post-title">[CSS] linear-gradient와 body 적용시 문제 해결</h1>
+  <span class="post-date">04 Mar 2021</span>
+  <p>사이드 프로젝트를 진행하려는데 배경에 이미지를 넣기는 싫고, 그렇다고 단색을 깔면 너무 밋밋해서 배경에 그라데이션을 넣을 수 있는 방법을 찾아보았다. 그런데 body에 linear-gradient를 적용하니 의도한대로 적용되지 않았다. 아래에 linear-gradient에 대한 간단한 소개와 body 적용시의 문제 해결법을 작성해보았다.</p>
+
+<h2 id="css로-배경에-그라데이션-넣기">CSS로 배경에 그라데이션 넣기</h2>
+
+<h3 id="linear-gradient">linear-gradient</h3>
+
+<p>기초<br />
+<a href="https://developer.mozilla.org/en-US/docs/Web/CSS/linear-gradient()">https://developer.mozilla.org/en-US/docs/Web/CSS/linear-gradient()</a></p>
+
+<ul>
+  <li>
+    <p>기본 사용법</p>
+
+    <div class="language-css highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">background</span><span class="o">:</span> <span class="nt">linear-gradient</span><span class="o">((</span><span class="nt">opt</span><span class="o">)</span><span class="nt">direction</span><span class="o">,</span> <span class="nt">color1</span><span class="o">,</span> <span class="nt">color2</span><span class="o">,</span> <span class="o">...);</span>
+</code></pre></div>    </div>
+
+    <p>direction(optional): 생략하면 to bottom으로 설정되며 아래와 같은 옵션으로 설정할 수 있다.</p>
+
+    <ul>
+      <li>to bottom(기본), to top, to left, to right</li>
+      <li>to top left, to bottom right 처럼 조합해서 사용할 수도 있다.</li>
+      <li>to (방향) 기재 방식 대신에 <a href="https://developer.mozilla.org/en-US/docs/Web/CSS/angle">CSS에서 제공하는 각도 표현 방식</a>을 사용해도 반영된다.</li>
+    </ul>
+
+    <div class="language-css highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">body</span> <span class="p">{</span>
+<span class="nl">background</span><span class="p">:</span> <span class="n">linear-gradient</span><span class="p">(</span><span class="n">to</span> <span class="nb">right</span><span class="p">,</span> <span class="no">red</span> <span class="m">20%</span><span class="p">,</span>
+<span class="no">orange</span> <span class="m">20%</span> <span class="m">40%</span><span class="p">,</span> <span class="no">yellow</span> <span class="m">40%</span> <span class="m">60%</span><span class="p">,</span> <span class="no">green</span> <span class="m">60%</span> <span class="m">80%</span><span class="p">,</span> <span class="no">blue</span> <span class="m">80%</span><span class="p">);</span>
+<span class="p">}</span>
+</code></pre></div>    </div>
+
+    <p>이런 식으로 설정하면 5가지 색이 블록 형태로 나타나도록 할 수도 있다. (그라데이션 아님!)</p>
+  </li>
+  <li>
+    <p>그 외 사용법은 잘 정리해둔 블로그가 많으니 생략….</p>
+  </li>
+</ul>
+
+<p>응용<br />
+<a href="https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Images/Using_CSS_gradients">https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Images/Using_CSS_gradient</a></p>
+
+<p><br /></p>
+<h2 id="body에-linear-gradient를-적용하였을-때-반복되는-문제-해결법">body에 linear-gradient를 적용하였을 때 반복되는 문제 해결법</h2>
+
+<p>div 등에 linear-gradient를 적용하면 정상 반영되는데, body에 linear-gradient를 적용하면 아래와 같이 의도치 않게 배경 그라데이션이 반복되는 현상이 발생했다. 반복 그라데이션을 원하는 경우에는 <a href="https://developer.mozilla.org/en-US/docs/Web/CSS/repeating-linear-gradient()">repeating-linear-gradient</a>를 사용하므로 이러한 동작은 불필요하다.</p>
+
+<p class="codepen" style="height: 258px; box-sizing: border-box; display: flex; align-items: center; justify-content: center; border: 2px solid; margin: 1em 0; padding: 1em;" data-height="258" data-theme-id="light" data-default-tab="css,result" data-user="hyo-choi" data-slug-hash="mdOjbbj" data-pen-title="linearGradientInBodyProblem"><span>See the Pen <a href="https://codepen.io/hyo-choi/pen/mdOjbbj"> linearGradientInBodyProblem</a> by Hyojeong Choi (<a href="https://codepen.io/hyo-choi">@hyo-choi</a>) on <a href="https://codepen.io">CodePen</a>.</span></p>
+<p>
+<script src="https://cpwebassets.codepen.io/assets/embed/ei.js"></script>
+</p>
+
+<p>해결법은 이쪽(<a href="https://stackoverflow.com/questions/2869212/css3-gradient-background-set-on-body-doesnt-stretch-but-instead-repeats">https://stackoverflow.com/questions/2869212/css3-gradient-background-set-on-body-doesnt-stretch-but-instead-repeats</a>)을 참고하였고, 아래와 같은 속성을 추가해주면 된다.</p>
+
+<div class="language-css highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c">/* (1) */</span>
+<span class="nt">background-attachment</span><span class="o">:</span> <span class="nt">fixed</span><span class="o">;</span>
+
+<span class="c">/* (2) */</span>
+<span class="nt">html</span> <span class="p">{</span>
+	<span class="nl">height</span><span class="p">:</span> <span class="m">100%</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="nt">body</span> <span class="p">{</span>
+	<span class="nl">height</span><span class="p">:</span> <span class="m">100%</span><span class="p">;</span>
+	<span class="nl">margin</span><span class="p">:</span> <span class="m">0</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>body에 기본적으로 height값이 설정되어있지 않고, background-attachment의 기본값이 scroll이기 때문에 발생하는 현상으로 보인다. 실제로 오류 케이스에서 내부에 포함된 div의 height를 조정하면 linear-gradient의 높이도 그만큼 증가하는 것을 확인할 수 있었다. 2번 솔루션의 경우 스크롤바가 제대로 표시되지 않는 이슈가 발생하기도 한다고 하여, 나는 1번 속성을 추가하기로 했다.</p>
+
+<p class="codepen" style="height: 265px; box-sizing: border-box; display: flex; align-items: center; justify-content: center; border: 2px solid; margin: 1em 0; padding: 1em;" data-height="265" data-theme-id="light" data-default-tab="css,result" data-user="hyo-choi" data-slug-hash="KKNBPOW" data-pen-title="linearGradientInBodyProblemSolved"><span>See the Pen <a href="https://codepen.io/hyo-choi/pen/KKNBPOW"> linearGradientInBodyProblemSolved</a> by Hyojeong Choi (<a href="https://codepen.io/hyo-choi">@hyo-choi</a>) on <a href="https://codepen.io">CodePen</a>.</span></p>
+<p>
+<script src="https://cpwebassets.codepen.io/assets/embed/ei.js"></script>
+</p>
+
+<p>이제 그라데이션이 정상적으로 페이지 전체를 덮는 것을 확인할 수 있다.</p>
+
+</div>
+
+
+<div class="related">
+  <h2>Related posts</h2>
+  <ul class="related-posts">
+    
+    <li>
+      <h3>
+        <a href="/study/study/cpp/2021/03/08/CPP-RAII-class/">
+          [C++] 자원 관리 클래스
+          <small>08 Mar 2021</small>
+        </a>
+      </h3>
+    </li>
+    
+    <li>
+      <h3>
+        <a href="/study/study/unity/2021/03/04/how-to-keep-BGM-and-UI/">
+          [Unity] 씬 전환시 BGM과 UI 유지하기
+          <small>04 Mar 2021</small>
+        </a>
+      </h3>
+    </li>
+    
+    <li>
+      <h3>
+        <a href="/projects/projects/to-do-list/2021/03/04/to-do-list-plan/">
+          [to-do list] 계획
+          <small>04 Mar 2021</small>
+        </a>
+      </h3>
+    </li>
+    
+  </ul>
+</div>
+
+
+      </div>
+    </div>
+
+    <label for="sidebar-checkbox" class="sidebar-toggle"></label>
+
+    <script src='/public/js/script.js'></script>
+  </body>
+</html>

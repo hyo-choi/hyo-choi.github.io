@@ -1,0 +1,1049 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+ <title>hyo-choi</title>
+ <link href="https://hyo-choi.github.io/atom.xml" rel="self"/>
+ <link href="https://hyo-choi.github.io/"/>
+ <updated>2021-03-09T22:15:08+09:00</updated>
+ <id>https://hyo-choi.github.io</id>
+ <author>
+   <name>Hyojeong Choi</name>
+   <email>hyochoi31@gmail.com</email>
+ </author>
+
+ 
+ <entry>
+   <title>[C++] 자원 관리 클래스</title>
+   <link href="https://hyo-choi.github.io/study/study/cpp/2021/03/08/CPP-RAII-class/"/>
+   <updated>2021-03-08T00:00:00+09:00</updated>
+   <id>https://hyo-choi.github.io/study/study/cpp/2021/03/08/CPP-RAII-class</id>
+   <content type="html">&lt;p&gt;💡 &lt;strong&gt;기본적인 개념, 사용법에 대한 글이 아닙니다. Effective C++을 읽으며 기억해둘 만한 부분을 정리한 글입니다. 개념을 익힌 뒤 읽어보시면 좋습니다.&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;ul&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;strong&gt;읽기 전에&lt;/strong&gt;&lt;/p&gt;
+
+    &lt;p&gt;책에서 언급된 &lt;strong&gt;auto_ptr는 C++11부터 deprecated 되었고 C++17 이후에는 아예 삭제&lt;/strong&gt;되었다. 대신 unique_ptr를 사용하자. unique_ptr에서는 auto_ptr에서는 해결할 수 없었던 부분(new[]로 할당한 포인터에 대한 delete 호출)도 해결할 수 있다.&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;br /&gt;
+새로 할당한 자원을 사용할 때에는 그 자원의 사용이 끝나면 메모리가 해제된다는 보장이 필요하다. 간단한 프로그램에서는 new에 짝이 되는 delete를 맞춰주기만 하면 되므로 필요성을 느끼기 어렵겠지만, 코드가 커지고 복잡해질수록 자원의 할당/해제가 까다로워지고 사용자가 실수할 가능성이 커진다. 블록 혹은 함수 내부에서 분기가 생길 때, 특정 함수에서 할당한 포인터를 반환받을 때 등 실수할 가능성은 무궁무진하다.&lt;/p&gt;
+
+&lt;p&gt;그런 이유로 생성자와 소멸자가 자동 호출된다는 특징을 이용한 자원 관리 클래스가 등장하였다. C++의 스마트 포인터는 이러한 자원 관리 클래스의 일종으로, unique_ptr, shared_ptr, weak_ptr가 이에 해당된다. (상기하였듯 auto_ptr는 C++11 이후로 사용할 수 없다.)&lt;/p&gt;
+
+&lt;p&gt;아래처럼 자원 획득과 자원 관리 객체의 초기화가 한 문장에서 이루어지는 것을 &lt;strong&gt;자원 획득 즉 초기화&lt;/strong&gt;(Resource Acquisition is Initialization: &lt;strong&gt;RAII&lt;/strong&gt;)라고 한다.&lt;/p&gt;
+
+&lt;div class=&quot;language-cpp highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c1&quot;&gt;// 사용 예&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;std&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;unique_ptr&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;ptr_a&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;int&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;5&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;));&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;std&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;unique_ptr&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[]&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;ptr_b&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;10&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]);&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;std&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;shared_ptr&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;ptr_c&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;10&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;],&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;std&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;default_delete&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[]&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;());&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;RAII 클래스에 구현하는 일반적인 복사 동작은 복사를 금지하거나 참조 카운팅을 해주는 선에서 마무리된다. 따라서 자원의 깊은 복사를 수행하는 ‘진짜 복사’ 동작 등이 필요하다면 별도의 RAII 클래스를 작성하여 사용하도록 한다. (또 다른 복사 동작 중 하나인 소유권 이전 동작은 unique_ptr에도 구현되어 있다.)&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;h2 id=&quot;스마트-포인터의-이해&quot;&gt;스마트 포인터의 이해&lt;/h2&gt;
+
+&lt;h3 id=&quot;unique_ptr-c11&quot;&gt;&lt;strong&gt;unique_ptr (C++11~)&lt;/strong&gt;&lt;/h3&gt;
+
+&lt;p&gt;&lt;a href=&quot;https://en.cppreference.com/w/cpp/memory/unique_ptr&quot;&gt;unique_ptr&lt;/a&gt;는 단어의 뜻 그대로 하나의 unique한 포인터를 관리하는 클래스이다. 복사 생성자는 정의되어있지 않으며 소유권을 이전하기 위한 &lt;a href=&quot;https://en.cppreference.com/w/cpp/memory/unique_ptr/operator%3D&quot;&gt;이동 연산자&lt;/a&gt;는 존재한다. (이 연산자는 오직 &lt;a href=&quot;https://en.cppreference.com/w/cpp/utility/move&quot;&gt;std::move&lt;/a&gt;를 이용한 rvalue에 대해서만 사용할 수 있다.) 소유권이 이전된 unique_pointer는 nullptr을 가리키는 댕글링 포인터가 되므로 이후 재참조하지 않도록 주의해야 한다. 자세한 사용법과 설명은 &lt;a href=&quot;https://en.cppreference.com/w/cpp/memory/unique_ptr&quot;&gt;이쪽&lt;/a&gt;을 참고.&lt;/p&gt;
+
+&lt;p&gt;unique_ptr는 두 개의 템플릿 인자를 가지며 두 번째 템플릿 인자는 디폴트로 &lt;a href=&quot;https://en.cppreference.com/w/cpp/memory/default_delete&quot;&gt;std::default_delete&lt;/a&gt;를 가진다. default_delete는 배열에 대응하는 템플릿도 가지고 있기 때문에 배열으로 객체를 생성했을 경우 해당되는 Deleter는 new[]에 대응하는 delete[] 형태로 맞춰진다. 그러니 auto_ptr에서 발생하던 문제에 대해 특별히 고려하지 않아도 된다. 특정 객체에 대한 Deleter를 따로 만들어 넣고 싶다면 두 번째 템플릿 인자에 functor를 전달해주면 된다.&lt;/p&gt;
+
+&lt;div class=&quot;language-cpp highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c1&quot;&gt;// (1)&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;template&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;T&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Deleter&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;std&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;default_delete&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;T&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;&amp;gt;&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;unique_ptr&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;// (2)&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;template&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;T&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Deleter&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;unique_ptr&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;T&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[],&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Deleter&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;// default_delete&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;template&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;T&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;struct&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;default_delete&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;template&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;T&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;struct&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;default_delete&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;T&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[]&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;C++14부터는 &lt;a href=&quot;https://en.cppreference.com/w/cpp/memory/unique_ptr/make_unique&quot;&gt;std::make_unique 함수&lt;/a&gt;를 제공하므로 해당 함수를 사용하면 좀 더 간편하게 unique_ptr를 만들 수 있고, C++11부터 도입된 &lt;a href=&quot;https://boycoding.tistory.com/184&quot;&gt;auto 키워드&lt;/a&gt;(타입 추론)를 사용하면 더 간편하게 쓸 수 있다.&lt;/p&gt;
+
+&lt;div class=&quot;language-cpp highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c1&quot;&gt;// 그냥 만들면&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;std&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;unique_ptr&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Vec3&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;ptr&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;Vec3&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;());&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;// 별로 안 간편해보이지만 make_unique를 사용한 예&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;std&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;unique_ptr&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Vec3&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;v1&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;std&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;make_unique&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Vec3&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;();&lt;/span&gt;
+&lt;span class=&quot;c1&quot;&gt;// auto를 이용해 간편해보이는 make_unique&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;auto&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;v2&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;std&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;make_unique&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Vec3&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;();&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;// 초기화하여 생성하기&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;std&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;unique_ptr&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Vec3&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;v3&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;std&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;make_unique&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Vec3&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+&lt;span class=&quot;c1&quot;&gt;// Vec3[5]의 unique_ptr 생성하기&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;std&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;unique_ptr&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Vec3&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[]&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;v4&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;std&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;make_unique&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Vec3&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[]&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;5&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;h3 id=&quot;shared_ptr-c11&quot;&gt;shared_ptr (C++11~)&lt;/h3&gt;
+
+&lt;p&gt;&lt;a href=&quot;https://en.cppreference.com/w/cpp/memory/shared_ptr&quot;&gt;shared_ptr&lt;/a&gt;는 대표적인 &lt;strong&gt;참조 카운팅 방식 스마트 포인터&lt;/strong&gt;(Reference-Counting Smart Pointer: &lt;strong&gt;RSCP&lt;/strong&gt;)다. RCSP는 특정 자원을 참조하는 외부 객체의 수를 유지하고 있다가 그 개수가 0이 되면 해당 자원을 자동으로 삭제한다. 이러한 특징은 가비지 컬렉션과 상당히 흡사하지만 참조 상태가 순환되는 현상을 없앨 수 없다는 점에서는 가비지 컬렉션과 다르다. 자세한 사용법과 설명은 &lt;a href=&quot;https://modoocode.com/252&quot;&gt;이쪽&lt;/a&gt;을 참고.&lt;/p&gt;
+
+&lt;p&gt;shared_ptr의 경우 unique_ptr과 다르게 디폴트 템플릿 인자 Deleter를 지원하지 않기 때문에, 배열을 생성자 오버로딩을 통해 생성자의 매개변수로 std::default_delete&amp;lt;T[]&amp;gt; 혹은 별도의 functor를 넘겨주어야 한다.&lt;/p&gt;
+
+&lt;div class=&quot;language-cpp highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c1&quot;&gt;// 잘못된 생성자 호출의 예.&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;std&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;shared_ptr&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;shared_bad&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;10&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]);&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;// 바른 생성자 호출 예시 (1)&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;std&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;shared_ptr&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;shared_good&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;10&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;],&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;std&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;default_delete&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[]&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;());&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;// 바른 생성자 호출 예시 (2)&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;struct&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;D&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;void&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;operator&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Foo&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;*&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;p&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;const&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;delete&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;p&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;}};&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;...&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;std&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;shared_ptr&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Foo&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;sh4&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Foo&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;D&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;());&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;// 바른 생성자 호출 예시 (3)&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;std&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;shared_ptr&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Foo&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;sh5&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Foo&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[](&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;auto&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;p&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;delete&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;p&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;});&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;그런데 위의 방법도 아주 완벽한 것은 아니라고 한다. shared_ptr은 참조 카운팅을 위한 제어 블록을 가지고 있는데, 이로 인해 위처럼 shared_ptr를 할당하면 동적 할당이 두 번 일어나야 한다. 동적 할당은 비용이 큰 동작이므로 한 번의 할당만 일어날 수 있도록 하기 위해 &lt;a href=&quot;https://en.cppreference.com/w/cpp/memory/shared_ptr/make_shared&quot;&gt;std::make_shared&lt;/a&gt; 함수를 사용하자. 단 배열형 shared_ptr에 대한 커스텀 Deleter 추가는 C++20에서나 추가된 기능이라고 하니 사용에 주의해야 할 것이다.&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;……까지 쓰고 보니 make_unique와 좀 헷갈리기 시작하는데, make_unique는 템플릿 단위에서 기본 Deleter를 설정해주기 때문에 make_unique에서도 크게 신경써줄 것이 없는 반면 make_shared는 기본 Deleter 개념이 없기 때문에 그런 것 같다. 굳이 왜 다른 구조로 만든 걸까 싶지만 우리는 남이 잘 만들어둔 것을 받아쓰는 입장이니 특성을 잘 이해하고 사용하는 것이 최선이겠다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;strong&gt;그 외의 사용 시 주의사항은 &lt;a href=&quot;https://modoocode.com/252#page-heading-2&quot;&gt;이쪽&lt;/a&gt;에 설명이 정말 잘 되어있으니 꼭 읽어보고 사용하자.&lt;/strong&gt;
+이유를 생략한 한 줄씩 요약:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;shared_ptr가 shared_ptr 외의 주소값(예를 들자면 int *a = new int[5]; 처럼 할당된 포인터)을 통해 생성되는 상황을 지양하자.&lt;/li&gt;
+  &lt;li&gt;객체에서 자기 자신(this)을 가리키는 shared_ptr를 사용하고 싶다면std::enable_shared_from_this을 public 상속하고 기반 클래스의 shared_from_this() 멤버 함수를 이용하여 해당 객체에 대한 shared_ptr을 얻자.&lt;/li&gt;
+  &lt;li&gt;구조상 shared_ptr간의 상호 참조가 필요할 때에는 weak_ptr를 활용하자.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;h2 id=&quot;자원-관리-클래스를-사용할-때-고려할-점&quot;&gt;자원 관리 클래스를 사용할 때 고려할 점&lt;/h2&gt;
+
+&lt;h3 id=&quot;뮤텍스-관리를-위한-클래스&quot;&gt;뮤텍스 관리를 위한 클래스&lt;/h3&gt;
+
+&lt;p&gt;블록이 끝날 때 뮤텍스가 자동으로 해제되도록 해주는 자원 관리 클래스를 만들고 싶다면 어떻게 해야 할까?&lt;/p&gt;
+
+&lt;div class=&quot;language-cpp highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c1&quot;&gt;// (1)번 방법&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Lock&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+&lt;span class=&quot;nl&quot;&gt;public:&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;explicit&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Lock&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Mutex&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;pm&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;mutexPtr&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;pm&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+        &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;lock&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;mutexPtr&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+        &lt;span class=&quot;o&quot;&gt;~&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Lock&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;unlock&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;mutexPtr&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;nl&quot;&gt;private:&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;explicit&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Lock&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;const&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Lock&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;amp;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;rhs&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;&lt;span class=&quot;c1&quot;&gt;// 복사를&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;Lock&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;amp;&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;operator&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;const&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Lock&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;amp;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;rhs&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;&lt;span class=&quot;c1&quot;&gt;// 막는다.&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;Mutex&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;mutexPtr&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;};&lt;/span&gt;
+
+&lt;span class=&quot;p&quot;&gt;...&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;Mutex&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;m&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;&lt;span class=&quot;c1&quot;&gt;// 뮤텍스 정의&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;...&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;c1&quot;&gt;// 임계 영역 지정을 위한 블록 설정&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;Lock&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;ml&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;amp;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;m&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;&lt;span class=&quot;c1&quot;&gt;// Lock 객체 생성과 동시에 Mutex lock&lt;/span&gt;
+        &lt;span class=&quot;p&quot;&gt;...&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;c1&quot;&gt;// Lock의 소멸자 호출 -&amp;gt; 자동 unlock&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;...&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;이런 식으로 설정해주면 자동으로 lock, unlock 되는 자원 관리 객체를 만들고 사용할 수 있다. 책에서는 shared_ptr을 사용한 예시 코드도 소개하고 있다.&lt;/p&gt;
+
+&lt;div class=&quot;language-cpp highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c1&quot;&gt;// (2)번 방법&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Lock&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+&lt;span class=&quot;nl&quot;&gt;public:&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;explicit&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Lock&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Mutex&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;pm&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;mutexPtr&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;pm&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;unlock&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+        &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;lock&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;mutexPtr&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;get&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;());&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;explicit&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;getPtr&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+&lt;span class=&quot;c1&quot;&gt;// 소멸자가 따로 없는 것에 주목.&lt;/span&gt;
+&lt;span class=&quot;nl&quot;&gt;private:&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;std&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;tr1&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;shared_ptr&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Mutex&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;mutexPtr&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;};&lt;/span&gt;
+
+&lt;span class=&quot;p&quot;&gt;...&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;Mutex&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;m&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;&lt;span class=&quot;c1&quot;&gt;// 뮤텍스 정의&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;...&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;c1&quot;&gt;// 임계 영역 지정을 위한 블록 설정&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;Lock&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;ml&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;amp;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;m&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;&lt;span class=&quot;c1&quot;&gt;// Lock 객체 생성과 동시에 Mutex lock&lt;/span&gt;
+        &lt;span class=&quot;p&quot;&gt;...&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;c1&quot;&gt;// Lock의 소멸자 호출 -&amp;gt; shared_ptr의 ref count가 0이므로 unlock&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;...&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;이 경우 클래스에 소멸자를 따로 선언하지 않았는데, 소멸자를 따로 선언하지 않으면 기본 소멸자가 비정적 데이터 멤버의 소멸자를 호출해주기 때문이다. 이때 shared_ptr는 참조 카운터가 0이 되었을 때 Deleter를 이용해 소멸되므로 해당 mutexPtr이 다른 곳에서 참조되고 있지 않으면 소멸되며 unlock 될 것이고, 다른 곳에서 참조되고 있다면 소멸되지 않아 lock 상태를 유지할 것이다.&lt;/p&gt;
+
+&lt;p&gt;❓ 그런데 나는 (2)가 실용성 있는 방법인지 잘 모르겠다. 일단 getter 등을 이용해 mutexPtr을 객체 외부에서 참조하게 된다면 ref count로 인해 unlock이 정상적으로 되지 않을 것이고(물론 그렇게 하지 않는 것이 의도된 동작인 것 같다.), 멀티스레딩 환경에서 하나의 뮤텍스를 여러 Lock 객체에서 참조하여 사용하는 상황을 생각해도 unlock은 ref count가 0이 될 때만 실행되므로 의도한 대로 동작하지 않을 것 같다. 단순히 뮤텍스의 락/언락 관리에는 (1)번 방법이 훨씬 효율적이고 이해하기에도 좋은 것 같다. 검색해봐도 뾰족한 답이 안 나와서 찝찝하지만 이 부분은 그냥 의문으로 남겨두고 다른 사람들과 상의해보거나 해야겠다.&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;h3 id=&quot;raii-객체-생성은-별도의-한-문장으로-만들자&quot;&gt;RAII 객체 생성은 별도의 한 문장으로 만들자&lt;/h3&gt;
+
+&lt;p&gt;(= RAII 객체 생성 시 예외가 끼어들 틈을 주지 말자)&lt;/p&gt;
+
+&lt;div class=&quot;language-cpp highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;priority&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;...&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;kt&quot;&gt;void&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;processWidget&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;std&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;tr1&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;shared_ptr&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Widget&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;pw&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;priority&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+            &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;...&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;...&lt;/span&gt;
+&lt;span class=&quot;c1&quot;&gt;// processWidget 함수를 호출&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;processWidget&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;std&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;tr1&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;shared_ptr&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Widget&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Widget&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;),&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;priority&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;());&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;위의 코드를 생각해보자. 아무 문제 없어 보이지만, 사실 이 코드는 컴파일러에 따라 메모리 누수를 일으킬 수도 있는 코드이다. 컴파일러는 processWidget 호출 코드를 만들기 전에 함수의 인자를 평가하는 순서를 밟는다. 두 번째 인자의 경우 priority 함수를 호출할 뿐이지만, 첫 번째 인자는 “new Widget”을 실행하는 부분과 std::tr1::shared_ptr의 생성자를 호출하는 두 부분으로 나뉜다. 그러므로 컴파일러는 processWidget 함수를 호출하기 전 다음의 세 가지 연산을 위한 코드를 만들어야 한다.&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;priority() 호출&lt;/li&gt;
+  &lt;li&gt;“new Widget”의 실행&lt;/li&gt;
+  &lt;li&gt;std::tr1::shared_ptr의 생성자 호출&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;이 중 “new Widget” 다음에 std::tr1::shared_ptr의 생성자가 호출되어야 한다는 것은 명백하다. 그러나 priority()의 호출 시점은 컴파일러에 따라 다르다. (이것은 C++ 컴파일러의 특징이다. 자바와 C#은 매개변수의 평가 순서가 특정하게 고정되어 있다.) 예를 들어 각 코드가&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;“new Widget”의 실행&lt;/li&gt;
+  &lt;li&gt;priority() 호출&lt;/li&gt;
+  &lt;li&gt;std::tr1::shared_ptr의 생성자 호출&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;이런 순서로 실행될 수도 있다. (컴파일러가 이렇게 하는 것이 효율 면에서 더 좋을 수 있다고 하는데 정확한 이유는 모르겠다.) 그런데 이런 순서에서 priority()가 예외를 던진다면? RAII 객체가 생성조차 되지 않았기 때문에 새로 할당한 포인터는 유실되고, 이는 그대로 누수로 이어질 것이다. 즉, 실행 순서 상 자원이 생성되는 시점과 자원 관리 객체의 생성 시점 사이에 예외가 끼어들 수 있는 상황은 늘 누수의 위험을 안고 있는 것이다.&lt;/p&gt;
+
+&lt;p&gt;컴파일러가 어떻게 동작할지 알고 우리가 이걸 방지하나! 라는 생각이 들 수도 있지만, 이 항목의 제목을 보면 아주 간단하게 해결할 수 있다. RAII 객체 생성을 항상 별도의 한 문장으로 만들면 된다. new로 메모리를 할당하는 시점과 RAII 객체의 생성 사이에 예외가 끼어들 틈을 주지 말자. 이런 점을 고려하지 않으면 예외 발생 시 디버깅하기 힘든 자원 누출이 초래될 수 있다.&lt;/p&gt;
+
+&lt;div class=&quot;language-cpp highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;n&quot;&gt;std&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;tr1&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;shared_ptr&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Widget&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;pw&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Widget&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;&lt;span class=&quot;c1&quot;&gt;// 예외가 끼어들 틈이 없다.&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;processWidget&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;pw&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;priority&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;());&lt;/span&gt;
+&lt;span class=&quot;c1&quot;&gt;// 이제 priority()에서 예외가 발생해도 스마트 포인터가 메모리를 잘 해제해줄 것이다.&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;h3 id=&quot;자원-관리-클래스가-관리하는-자원은-외부에서-접근할-수-있도록-하자&quot;&gt;자원 관리 클래스가 관리하는 자원은 외부에서 접근할 수 있도록 하자&lt;/h3&gt;
+
+&lt;div class=&quot;language-cpp highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;n&quot;&gt;std&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;tr1&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;shared_ptr&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;whateverClass&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;ptr&lt;/span&gt;
+        &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;std&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;make_shared&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;whateverClass&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;();&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;// (1)&lt;/span&gt;
+&lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;whateverFunction&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;const&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;whateverClass&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;p&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;...&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;// (2)&lt;/span&gt;
+&lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;result&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;whateverFunction&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ptr&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;// (3)&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;위의 코드를 보고 생각해보자. (3)번 라인은 제대로 컴파일될까?&lt;/p&gt;
+
+&lt;p&gt;정답은 NO다. 당연하다. whateverFunction의 인자로는 whateverClass에 대한 포인터가 요구되는데, ptr은 std::tr1::shared_ptr 타입이니 안 되는 게 맞고 컴파일러는 옳은 일을 했다. 그러니 우리는 컴파일러가 제대로 작동할 수 있는 코드를 만들어줘야 한다. RAII 객체에서 발생하는 이러한 문제는 일반적으로 두 가지 방법을 통해 해소될 수 있는데, 하나는 &lt;strong&gt;명시적 변환&lt;/strong&gt;이고 다른 하나는 &lt;strong&gt;암시적 변환&lt;/strong&gt;이다.&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;strong&gt;명시적 변환&lt;/strong&gt;&lt;/p&gt;
+
+    &lt;p&gt;명시적 변환은 간단하다. RAII 객체가 내부에 가지고 있는 실제 포인터를 반환하는 함수를 이용하는 것이다. C++에서 제공하는 스마트 포인터의 경우 get이라는 멤버 함수를 가지고 있는데, 별도 처리 없이 해당 함수를 호출하는 것만으로도 원래 자원의 포인터를 얻어올 수 있다.&lt;/p&gt;
+
+    &lt;p&gt;스마트 포인터를 사용하는 경우 이뿐만 아니라 오버로딩된 opeator→, operator* 연산자를 통해 get()을 이용하지 않고도 클래스 객체로 된 자원의 멤버에 바로 접근할 수 있다.&lt;/p&gt;
+
+    &lt;div class=&quot;language-cpp highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;  &lt;span class=&quot;k&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Foo&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+  &lt;span class=&quot;nl&quot;&gt;public:&lt;/span&gt;
+      &lt;span class=&quot;kt&quot;&gt;bool&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;bar&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;();&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;};&lt;/span&gt;
+
+  &lt;span class=&quot;n&quot;&gt;std&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;tr1&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;shared_ptr&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Foo&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;ptr&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;std&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;make_shared&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Foo&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;();&lt;/span&gt;
+
+  &lt;span class=&quot;n&quot;&gt;Foo&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;*&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;origin&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;ptr&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;get&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;();&lt;/span&gt;&lt;span class=&quot;c1&quot;&gt;// 명시적 변환 함수를 통해 할당된 자원의 포인터를 얻어온다.&lt;/span&gt;
+  &lt;span class=&quot;kt&quot;&gt;bool&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;a&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;ptr&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;bar&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;();&lt;/span&gt;&lt;span class=&quot;c1&quot;&gt;// 와! 할당된 자원 없이 스마트 포인터만으로 멤버에 접근할 수 있다.&lt;/span&gt;
+  &lt;span class=&quot;kt&quot;&gt;bool&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;b&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ptr&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;).&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;bar&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;();&lt;/span&gt;&lt;span class=&quot;c1&quot;&gt;// 역참조의 경우에도 마찬가지로 정상 작동한다.&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;    &lt;/div&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;strong&gt;암시적 변환&lt;/strong&gt;&lt;/p&gt;
+
+    &lt;p&gt;명시적 변환(주로 get())을 통해 포인터를 얻어오는 것이 너무 싫고 번거로운 사람도 있을 수 있다. 이런 경우 &lt;a href=&quot;https://www.qaupot.com/wordpress/?p=2253&quot;&gt;캐스팅 연산자 오버로딩&lt;/a&gt;을 통해 암시적 변환 함수를 제공하면 된다.&lt;/p&gt;
+
+    &lt;div class=&quot;language-cpp highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;  &lt;span class=&quot;k&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Font&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;c1&quot;&gt;// RAII 클래스&lt;/span&gt;
+  &lt;span class=&quot;nl&quot;&gt;public:&lt;/span&gt;
+      &lt;span class=&quot;p&quot;&gt;...&lt;/span&gt;
+      &lt;span class=&quot;k&quot;&gt;operator&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;FontHandle&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;const&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;f&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;c1&quot;&gt;// 암시적 변환 함수&lt;/span&gt;
+  &lt;span class=&quot;nl&quot;&gt;private:&lt;/span&gt;
+      &lt;span class=&quot;n&quot;&gt;FontHandle&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;f&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;&lt;span class=&quot;c1&quot;&gt;// 실제 관리되는 자원(객체)&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;};&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;...&lt;/span&gt;
+  &lt;span class=&quot;kt&quot;&gt;void&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;changeFontSize&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;FontHandle&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;f&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;newsize&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;...&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;...&lt;/span&gt;
+  &lt;span class=&quot;n&quot;&gt;Font&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;f&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;getFont&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;());&lt;/span&gt;&lt;span class=&quot;c1&quot;&gt;// Font형으로 선언한 RAII 객체&lt;/span&gt;
+  &lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;newFontSize&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+
+  &lt;span class=&quot;n&quot;&gt;changeFontSize&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;f&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;newFontSize&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+  &lt;span class=&quot;c1&quot;&gt;// 암시적 변환 함수로 인해 FontHandle으로 자동 형변환된다.&lt;/span&gt;
+  &lt;span class=&quot;c1&quot;&gt;// 좋아 보이지만...&lt;/span&gt;
+
+  &lt;span class=&quot;n&quot;&gt;FontHandle&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;f2&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;f&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;&lt;span class=&quot;c1&quot;&gt;// 오잉?&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;    &lt;/div&gt;
+
+    &lt;p&gt;좋아 보이지만……? 암시적 형변환이 있을 때 마지막 라인처럼 사용하는 경우 (1) Font 객체를 복사할 의도였더라도 FontHandle형으로 자동 형변환되어 복사된다. (2) 따라서 Font라는 RAII 객체가 관리하고 있는 FontHandle 객체가 f2를 이용해서도 직접 사용할 수 있는 상태가 된다. (3) Font형 객체 f가 소멸되면 f2는 해제된 자원에 매달려있게 된다. ……는 문제들이 생긴다.&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;RAII 객체로부터 실제 자원을 얻어오는 방법으로 명시적 변환을 제공할 것인지 암시적 변환을 허용할 것인지에 대한 결정은 해당 클래스의 용도와 사용 환경에 따라 달라진다. 둘 중 무엇을 사용하든 잘 설계한 클래스라면 “맞게 쓰기는 쉽게, 틀리게 쓰기에는 어렵게” 만들어져 있어야 할 것이다.&lt;/p&gt;
+
+&lt;p&gt;늘 그런 것은 아니지만 암시적 변환보다는 명시적 변환을 사용하는 쪽이 나을 때가 많은데, 명시적 변환을 이용하면 원치 않는 타입 변환의 여지가 줄어들기 때문이다. 다만 사용 시 자연스럽게 일어나는 암시적 타입 변환이 빛을 발하는 경우가 있다는 것도 잊지 않고 염두에 두어야 하겠다.&lt;/p&gt;
+
+&lt;p&gt;또, RAII 클래스에서 자원 접근 함수를 제공하는 설계가 캡슐화에 위배되지 않는가 하는 생각이 들 수 있는데, 캡슐화 측면에서 보면 그렇지만 RAII 클래스는 애초부터 데이터 은닉을 목적으로 하는 클래스가 아니므로 자원 할당과 해제가 제대로 일어나기만 하면 목적에 맞게 잘 설계된 것이라 볼 수 있다. 결론적으로는 사용자가 볼 필요가 없는 데이터에 대한 접근은 막아주고, 목적상 접근이 필요한 데이터를 향한 통로는 열어주는 것이 RAII 클래스의 올바른 설계라고 볼 수 있다.&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;h3 id=&quot;reference&quot;&gt;Reference&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;스콧 마이어스 지음, 곽용재 옮김, “Effective C++,” 제3판.
+    &lt;ul&gt;
+      &lt;li&gt;항목 13: 자원 관리에는 객체가 그만!, 118. ~ 항목 17: new로 생성한 객체를 스마트 포인터에 저장하는 코드는 별도의 한 문장으로 만들자, 135.&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+</content>
+ </entry>
+ 
+ <entry>
+   <title>[Unity] 씬 전환시 BGM과 UI 유지하기</title>
+   <link href="https://hyo-choi.github.io/study/study/unity/2021/03/04/how-to-keep-BGM-and-UI/"/>
+   <updated>2021-03-04T00:00:00+09:00</updated>
+   <id>https://hyo-choi.github.io/study/study/unity/2021/03/04/how-to-keep-BGM-and-UI</id>
+   <content type="html">&lt;p&gt;유튜브에서 유니티 튜토리얼을 따라하며 공부하다가 BGM을 추가해보고 싶어졌다. 그런데 GameObject로 BGMManager를 각 씬에 넣어줬더니 BGM이 이어지지 않고 씬마다 각각 재생되었다. 같은 BGM을 샘플 게임 내내 유지하고 싶었기 때문에 해결 방법을 찾아보았다.&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;h2 id=&quot;씬-전환-시-오브젝트-유지하기&quot;&gt;씬 전환 시 오브젝트 유지하기&lt;/h2&gt;
+
+&lt;h3 id=&quot;dontdestroyonload&quot;&gt;DontDestroyOnLoad&lt;/h3&gt;
+
+&lt;p&gt;DontDestroyOnLoad(GameObject)는 다른 씬으로 넘어갈 때 파괴하지 않고 유지할 오브젝트에 사용할 수 있다. 주의할 점은 DontDestroyOnLoad를 어떤 오브젝트의 하위 오브젝트에 설정하면 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;DontDestroyOnLoad only works for root GameObjects or components on root GameObjects.&lt;/code&gt; 라는 워닝을 보게 된다는 것이다. 주의 문구대로 루트 오브젝트, 혹은 루트 오브젝트의 컴포넌트에만 해당 함수를 적용하도록 하자.&lt;/p&gt;
+
+&lt;p&gt;또, 해당 오브젝트를 Destroy하지 않는 이상 이어지는 모든 씬에 존재하게 되므로 BGM 오브젝트와 같이 중복되면 안 되는 경우 다른 씬의 중복은 제거해주어야 한다.&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;적용 예시&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;div class=&quot;language-csharp highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;private&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;void&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;Awake&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;// playOnAwake는 설정하지 않았음&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;BGMManager&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;gameObject&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;bgm&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;GetComponent&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;AudioSource&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;&amp;gt;();&lt;/span&gt;
+	&lt;span class=&quot;nf&quot;&gt;pauseAndPlay&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;();&lt;/span&gt;
+	&lt;span class=&quot;nf&quot;&gt;DontDestroyOnLoad&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;BGMManager&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;// 여기!&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;h3 id=&quot;bgm-오브젝트와-연동된-ui도-함께-유지하기&quot;&gt;BGM 오브젝트와 연동된 UI도 함께 유지하기&lt;/h3&gt;
+
+&lt;p&gt;위 방법을 통해 다음 씬으로 전환될 때에도 BGM이 끊기지 않도록 설정하였다. 여기서 좀 더 디벨롭하여 BGM의 재생/정지 버튼을 만들어 임의로 조정할 수 있게 하고 싶었는데, Canvas에 버튼 UI를 넣어두니 씬이 전환될 때마다 DontDestroyOnLoad 처리해둔 BGMManager와 제대로 연결이 되지 않았다.&lt;/p&gt;
+
+&lt;p&gt;이 문제는 어떻게 해결할 수 있을지 몰라 한참을 헤맸는데, 웬걸 굉장히 간단하게 해결할 수 있는 문제였다.&lt;/p&gt;
+
+&lt;p&gt;Canvas 오브젝트는 루트 오브젝트여야 하고 UI 요소들은 해당 Canvas 안에만 있을 수 있다고 생각했는데, 생각해보니 Canvas를 BGMManager의 하위 오브젝트로 추가할 수 있었다. 그래서 이렇게 BGMManager의 하위에 Canvas를, 그 하위에 재생/정지를 처리해줄 버튼 오브젝트를 추가해주었다.&lt;/p&gt;
+
+&lt;p align=&quot;center&quot;&gt;
+&lt;img src=&quot;/assets/images/2021-03-04-how-to-keep-BGM-and-UI_1.png&quot; width=&quot;200px&quot; alt=&quot;Hierarchy image&quot; /&gt; 
+&lt;/p&gt;
+&lt;p&gt;그러자 UI도 DontDestroyOnLoad의 영향을 받아 씬 전환시에 유지되며 BGM과의 연결도 끊어지지 않아 의도한 동작대로 잘 처리되었다.&lt;/p&gt;
+
+&lt;p&gt;이 경우에도 Destroy 전까지는 버튼이 모든 씬에서 출력되므로 꼭! 중복되는 버튼은 제거해주도록 한다. 왜 이 말을 두 번이나 쓰냐면 루트 Canvas 오브젝트에 추가해두었던 플레이 버튼을 안 지워서 구현이 제대로 안 된 줄 알고 1시간쯤 삽질했기 때문이다…….&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;해당 부분 코드&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;div class=&quot;language-csharp highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;private&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;void&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;Awake&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;BGMManager&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;gameObject&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;bgm&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;GetComponent&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;AudioSource&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;&amp;gt;();&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;playButton&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;GetComponentInChildren&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Button&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;&amp;gt;();&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;playButtonText&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;playButton&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;GetComponentInChildren&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Text&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;&amp;gt;();&lt;/span&gt;
+	&lt;span class=&quot;nf&quot;&gt;pauseAndPlay&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;();&lt;/span&gt;
+	&lt;span class=&quot;nf&quot;&gt;DontDestroyOnLoad&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;BGMManager&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+
+&lt;span class=&quot;k&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;void&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;pauseAndPlay&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;// inspector에서 버튼의 onClick과 연동해두었음&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+	&lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;bgm&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;isPlaying&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+	&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+		&lt;span class=&quot;n&quot;&gt;playButtonText&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;text&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;▶︎&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+		&lt;span class=&quot;n&quot;&gt;bgm&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;Pause&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;();&lt;/span&gt;
+	&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+	&lt;span class=&quot;k&quot;&gt;else&lt;/span&gt;
+	&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+		&lt;span class=&quot;n&quot;&gt;playButtonText&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;text&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;❚❚&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+		&lt;span class=&quot;n&quot;&gt;bgm&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;Play&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;();&lt;/span&gt;
+	&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p align=&quot;center&quot;&gt;
+&lt;img src=&quot;/assets/images/2021-03-04-how-to-keep-BGM-and-UI_2.png&quot; width=&quot;100%&quot; alt=&quot;Game screenshot&quot; /&gt; 
+완성한 샘플 게임 이미지
+&lt;/p&gt;
+&lt;p&gt;이렇게 BGM과 UI 처리를 할 수 있었다. DontDestroyOnLoad는 종종 쓰이게 될 것 같으므로 잘 기억해두는 것이 좋겠다.&lt;/p&gt;
+</content>
+ </entry>
+ 
+ <entry>
+   <title>[CSS] linear-gradient와 body 적용시 문제 해결</title>
+   <link href="https://hyo-choi.github.io/study/study/css/2021/03/04/linear-gradient-and-body-problem/"/>
+   <updated>2021-03-04T00:00:00+09:00</updated>
+   <id>https://hyo-choi.github.io/study/study/css/2021/03/04/linear-gradient-and-body-problem</id>
+   <content type="html">&lt;p&gt;사이드 프로젝트를 진행하려는데 배경에 이미지를 넣기는 싫고, 그렇다고 단색을 깔면 너무 밋밋해서 배경에 그라데이션을 넣을 수 있는 방법을 찾아보았다. 그런데 body에 linear-gradient를 적용하니 의도한대로 적용되지 않았다. 아래에 linear-gradient에 대한 간단한 소개와 body 적용시의 문제 해결법을 작성해보았다.&lt;/p&gt;
+
+&lt;h2 id=&quot;css로-배경에-그라데이션-넣기&quot;&gt;CSS로 배경에 그라데이션 넣기&lt;/h2&gt;
+
+&lt;h3 id=&quot;linear-gradient&quot;&gt;linear-gradient&lt;/h3&gt;
+
+&lt;p&gt;기초&lt;br /&gt;
+&lt;a href=&quot;https://developer.mozilla.org/en-US/docs/Web/CSS/linear-gradient()&quot;&gt;https://developer.mozilla.org/en-US/docs/Web/CSS/linear-gradient()&lt;/a&gt;&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;
+    &lt;p&gt;기본 사용법&lt;/p&gt;
+
+    &lt;div class=&quot;language-css highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nt&quot;&gt;background&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;linear-gradient&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;((&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;opt&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;direction&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;color1&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;color2&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;...);&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;    &lt;/div&gt;
+
+    &lt;p&gt;direction(optional): 생략하면 to bottom으로 설정되며 아래와 같은 옵션으로 설정할 수 있다.&lt;/p&gt;
+
+    &lt;ul&gt;
+      &lt;li&gt;to bottom(기본), to top, to left, to right&lt;/li&gt;
+      &lt;li&gt;to top left, to bottom right 처럼 조합해서 사용할 수도 있다.&lt;/li&gt;
+      &lt;li&gt;to (방향) 기재 방식 대신에 &lt;a href=&quot;https://developer.mozilla.org/en-US/docs/Web/CSS/angle&quot;&gt;CSS에서 제공하는 각도 표현 방식&lt;/a&gt;을 사용해도 반영된다.&lt;/li&gt;
+    &lt;/ul&gt;
+
+    &lt;div class=&quot;language-css highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nt&quot;&gt;body&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+&lt;span class=&quot;nl&quot;&gt;background&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;linear-gradient&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;to&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;right&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;no&quot;&gt;red&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;20%&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+&lt;span class=&quot;no&quot;&gt;orange&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;20%&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;40%&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;no&quot;&gt;yellow&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;40%&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;60%&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;no&quot;&gt;green&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;60%&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;80%&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;no&quot;&gt;blue&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;80%&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;    &lt;/div&gt;
+
+    &lt;p&gt;이런 식으로 설정하면 5가지 색이 블록 형태로 나타나도록 할 수도 있다. (그라데이션 아님!)&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;그 외 사용법은 잘 정리해둔 블로그가 많으니 생략….&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;응용&lt;br /&gt;
+&lt;a href=&quot;https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Images/Using_CSS_gradients&quot;&gt;https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Images/Using_CSS_gradient&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;h2 id=&quot;body에-linear-gradient를-적용하였을-때-반복되는-문제-해결법&quot;&gt;body에 linear-gradient를 적용하였을 때 반복되는 문제 해결법&lt;/h2&gt;
+
+&lt;p&gt;div 등에 linear-gradient를 적용하면 정상 반영되는데, body에 linear-gradient를 적용하면 아래와 같이 의도치 않게 배경 그라데이션이 반복되는 현상이 발생했다. 반복 그라데이션을 원하는 경우에는 &lt;a href=&quot;https://developer.mozilla.org/en-US/docs/Web/CSS/repeating-linear-gradient()&quot;&gt;repeating-linear-gradient&lt;/a&gt;를 사용하므로 이러한 동작은 불필요하다.&lt;/p&gt;
+
+&lt;p class=&quot;codepen&quot; style=&quot;height: 258px; box-sizing: border-box; display: flex; align-items: center; justify-content: center; border: 2px solid; margin: 1em 0; padding: 1em;&quot; data-height=&quot;258&quot; data-theme-id=&quot;light&quot; data-default-tab=&quot;css,result&quot; data-user=&quot;hyo-choi&quot; data-slug-hash=&quot;mdOjbbj&quot; data-pen-title=&quot;linearGradientInBodyProblem&quot;&gt;&lt;span&gt;See the Pen &lt;a href=&quot;https://codepen.io/hyo-choi/pen/mdOjbbj&quot;&gt; linearGradientInBodyProblem&lt;/a&gt; by Hyojeong Choi (&lt;a href=&quot;https://codepen.io/hyo-choi&quot;&gt;@hyo-choi&lt;/a&gt;) on &lt;a href=&quot;https://codepen.io&quot;&gt;CodePen&lt;/a&gt;.&lt;/span&gt;&lt;/p&gt;
+&lt;p&gt;
+&lt;script src=&quot;https://cpwebassets.codepen.io/assets/embed/ei.js&quot;&gt;&lt;/script&gt;
+&lt;/p&gt;
+
+&lt;p&gt;해결법은 이쪽(&lt;a href=&quot;https://stackoverflow.com/questions/2869212/css3-gradient-background-set-on-body-doesnt-stretch-but-instead-repeats&quot;&gt;https://stackoverflow.com/questions/2869212/css3-gradient-background-set-on-body-doesnt-stretch-but-instead-repeats&lt;/a&gt;)을 참고하였고, 아래와 같은 속성을 추가해주면 된다.&lt;/p&gt;
+
+&lt;div class=&quot;language-css highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c&quot;&gt;/* (1) */&lt;/span&gt;
+&lt;span class=&quot;nt&quot;&gt;background-attachment&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;fixed&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+
+&lt;span class=&quot;c&quot;&gt;/* (2) */&lt;/span&gt;
+&lt;span class=&quot;nt&quot;&gt;html&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+	&lt;span class=&quot;nl&quot;&gt;height&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;100%&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+
+&lt;span class=&quot;nt&quot;&gt;body&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+	&lt;span class=&quot;nl&quot;&gt;height&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;100%&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+	&lt;span class=&quot;nl&quot;&gt;margin&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;m&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;body에 기본적으로 height값이 설정되어있지 않고, background-attachment의 기본값이 scroll이기 때문에 발생하는 현상으로 보인다. 실제로 오류 케이스에서 내부에 포함된 div의 height를 조정하면 linear-gradient의 높이도 그만큼 증가하는 것을 확인할 수 있었다. 2번 솔루션의 경우 스크롤바가 제대로 표시되지 않는 이슈가 발생하기도 한다고 하여, 나는 1번 속성을 추가하기로 했다.&lt;/p&gt;
+
+&lt;p class=&quot;codepen&quot; style=&quot;height: 265px; box-sizing: border-box; display: flex; align-items: center; justify-content: center; border: 2px solid; margin: 1em 0; padding: 1em;&quot; data-height=&quot;265&quot; data-theme-id=&quot;light&quot; data-default-tab=&quot;css,result&quot; data-user=&quot;hyo-choi&quot; data-slug-hash=&quot;KKNBPOW&quot; data-pen-title=&quot;linearGradientInBodyProblemSolved&quot;&gt;&lt;span&gt;See the Pen &lt;a href=&quot;https://codepen.io/hyo-choi/pen/KKNBPOW&quot;&gt; linearGradientInBodyProblemSolved&lt;/a&gt; by Hyojeong Choi (&lt;a href=&quot;https://codepen.io/hyo-choi&quot;&gt;@hyo-choi&lt;/a&gt;) on &lt;a href=&quot;https://codepen.io&quot;&gt;CodePen&lt;/a&gt;.&lt;/span&gt;&lt;/p&gt;
+&lt;p&gt;
+&lt;script src=&quot;https://cpwebassets.codepen.io/assets/embed/ei.js&quot;&gt;&lt;/script&gt;
+&lt;/p&gt;
+
+&lt;p&gt;이제 그라데이션이 정상적으로 페이지 전체를 덮는 것을 확인할 수 있다.&lt;/p&gt;
+</content>
+ </entry>
+ 
+ <entry>
+   <title>[to-do list] 계획</title>
+   <link href="https://hyo-choi.github.io/projects/projects/to-do-list/2021/03/04/to-do-list-plan/"/>
+   <updated>2021-03-04T00:00:00+09:00</updated>
+   <id>https://hyo-choi.github.io/projects/projects/to-do-list/2021/03/04/to-do-list-plan</id>
+   <content type="html">&lt;p&gt;생활코딩에서 HTML과 CSS를 맛보기로 공부한 뒤 노마드 코더의 &lt;a href=&quot;https://nomadcoders.co/javascript-for-beginners/lobby&quot;&gt;바닐라 JS로 크롬 앱 만들기&lt;/a&gt;를 완강했다. (&lt;a href=&quot;https://github.com/hyo-choi/myMomontom&quot;&gt;완성본 github repo&lt;/a&gt;) (&lt;a href=&quot;https://hyo-choi.github.io/myMomontom/&quot;&gt;완성본 페이지 링크&lt;/a&gt;) 날씨 기능은 현재 상태에서 굳이 넣을 필요를 느끼지 못해서 구현을 생략하였고, to-do list를 리셋하는 기능과 이름을 재설정하는 기능은 추가로 넣어본 부분이다.&lt;/p&gt;
+
+&lt;p&gt;이 과정에서 HTML, CSS, JS를 어떻게 사용해야 하는지에 대한 감 정도는 잡은 것 같아 제대로 공부해보기 위해 작게 사이드 프로젝트를 진행해보려 한다. 거창한 건 아니고 &lt;strong&gt;좀 더 많은 기능을 수행할 수 있는 to-do list&lt;/strong&gt;를 만들어보는 것을 목표로 잡았다.&lt;/p&gt;
+
+&lt;p&gt;프로젝트의 대략적인 구상은 다음과 같다.&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;strong&gt;목표: 나만의 to-do list 사이트 만들어보기&lt;/strong&gt; (&lt;a href=&quot;https://github.com/hyo-choi/to-do-list&quot;&gt;github repo&lt;/a&gt;)&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;strong&gt;구현할 기능&lt;/strong&gt;&lt;/p&gt;
+
+    &lt;ul&gt;
+      &lt;li&gt;&lt;strong&gt;to-do list&lt;/strong&gt;
+        &lt;ol&gt;
+          &lt;li&gt;추가 시
+            &lt;ul&gt;
+              &lt;li&gt;to-do 중요도 설정&lt;/li&gt;
+              &lt;li&gt;to-do 마감기한 설정&lt;/li&gt;
+            &lt;/ul&gt;
+          &lt;/li&gt;
+          &lt;li&gt;진행 중
+            &lt;ul&gt;
+              &lt;li&gt;to-do 달성 현황에 따른 레벨업/다운 기능&lt;/li&gt;
+              &lt;li&gt;각 to-do의 중요도에 따라 정렬&lt;/li&gt;
+              &lt;li&gt;
+                &lt;dl&gt;
+                  &lt;dt&gt;마감기한이 설정된 경우&lt;/dt&gt;
+                  &lt;dd&gt;마감 기한과 등록일의 차이를 기준으로 일정 % 이상 가까워지면 to-do의 색 변경&lt;/dd&gt;
+                &lt;/dl&gt;
+              &lt;/li&gt;
+              &lt;li&gt;to-do 변경 (모든 정보)&lt;/li&gt;
+              &lt;li&gt;to-do 삭제&lt;/li&gt;
+            &lt;/ul&gt;
+          &lt;/li&gt;
+          &lt;li&gt;완료
+            &lt;ul&gt;
+              &lt;li&gt;‘진행 중’ 탭으로 복귀&lt;/li&gt;
+              &lt;li&gt;영구 삭제&lt;/li&gt;
+            &lt;/ul&gt;
+          &lt;/li&gt;
+        &lt;/ol&gt;
+      &lt;/li&gt;
+      &lt;li&gt;&lt;strong&gt;정보 제공&lt;/strong&gt;
+        &lt;ul&gt;
+          &lt;li&gt;현재 시간&lt;/li&gt;
+          &lt;li&gt;현재 위치 관련
+            &lt;ul&gt;
+              &lt;li&gt;일기예보&lt;/li&gt;
+              &lt;li&gt;미세먼지 정보&lt;/li&gt;
+            &lt;/ul&gt;
+          &lt;/li&gt;
+        &lt;/ul&gt;
+      &lt;/li&gt;
+      &lt;li&gt;&lt;strong&gt;관리 메뉴&lt;/strong&gt;
+        &lt;ul&gt;
+          &lt;li&gt;앱 리셋 (이름, 레벨, to-do list 전부)&lt;/li&gt;
+          &lt;li&gt;유저 이름 변경&lt;/li&gt;
+        &lt;/ul&gt;
+      &lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;strong&gt;유저로부터 입력받을 정보&lt;/strong&gt;&lt;/p&gt;
+
+    &lt;ul&gt;
+      &lt;li&gt;닉네임&lt;/li&gt;
+      &lt;li&gt;to-do list
+        &lt;ul&gt;
+          &lt;li&gt;내용 (필수)&lt;/li&gt;
+          &lt;li&gt;등록일 (자동 수집)&lt;/li&gt;
+          &lt;li&gt;마감기한 (선택)&lt;/li&gt;
+          &lt;li&gt;중요도 (미선택시 보통으로)&lt;/li&gt;
+        &lt;/ul&gt;
+      &lt;/li&gt;
+      &lt;li&gt;위치 정보 (자동 수집 허용/비허용)&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;거창한 건 아니라고는 했는데 이것저것 쓰고 보니 굉장히 거창해 보인다……. 프로젝트를 진행하면서 가능한 한 구현해보고, 덜어내거나 추가할 기능이 있으면 이 글을 수정하는 대신 새 글을 작성하고 링크를 추가하는 식으로 진행하려 한다.&lt;/p&gt;
+
+&lt;p&gt;디자인은 일단 이런 느낌으로 작성해봤다. 진행하면서 바뀔 수도 있는데 당장은 이 정도로 해두고 기능에 집중해보려 한다.&lt;/p&gt;
+
+&lt;p class=&quot;codepen&quot; style=&quot;height: 531px; box-sizing: border-box; display: flex; align-items: center; justify-content: center; border: 2px solid; margin: 1em 0; padding: 1em;&quot; data-height=&quot;531&quot; data-theme-id=&quot;light&quot; data-default-tab=&quot;html,result&quot; data-user=&quot;hyo-choi&quot; data-slug-hash=&quot;bGBjVWg&quot; data-pen-title=&quot;ToDoList&quot;&gt;&lt;span&gt;See the Pen &lt;a href=&quot;https://codepen.io/hyo-choi/pen/bGBjVWg&quot;&gt; ToDoList&lt;/a&gt; by Hyojeong Choi (&lt;a href=&quot;https://codepen.io/hyo-choi&quot;&gt;@hyo-choi&lt;/a&gt;) on &lt;a href=&quot;https://codepen.io&quot;&gt;CodePen&lt;/a&gt;.&lt;/span&gt;&lt;/p&gt;
+&lt;script src=&quot;https://cpwebassets.codepen.io/assets/embed/ei.js&quot;&gt;&lt;/script&gt;
+
+</content>
+ </entry>
+ 
+ <entry>
+   <title>[C++] 상수 멤버와 비상수 멤버</title>
+   <link href="https://hyo-choi.github.io/study/study/cpp/2021/03/01/const-and-non-const-member/"/>
+   <updated>2021-03-01T00:00:00+09:00</updated>
+   <id>https://hyo-choi.github.io/study/study/cpp/2021/03/01/const-and-non-const-member</id>
+   <content type="html">&lt;p&gt;💡 &lt;strong&gt;기본적인 개념, 사용법에 대한 글이 아닙니다. Effective C++을 읽으며 기억해둘 만한 부분을 정리한 글입니다. 개념을 익힌 뒤 읽어보시면 좋습니다.&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;ul&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;strong&gt;용어 정의&lt;/strong&gt;&lt;/p&gt;
+
+    &lt;ul&gt;
+      &lt;li&gt;&lt;strong&gt;비상수 멤버&lt;/strong&gt;: const 키워드가 없는 일반 멤버&lt;/li&gt;
+      &lt;li&gt;&lt;strong&gt;상수 멤버&lt;/strong&gt;: (이 글 한정) 비상수 멤버와 기능상 차이 없이 const 키워드만 붙어 있는 멤버&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;함수의 선언에서 const 키워드가 있고 없고의 차이만 있는 함수들은 오버로딩이 된다.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;예를 들어 operator[] 를 지원하는 클래스의 경우 상수 객체가 생성될 가능성이 있으므로 아래와 같이 두 종류의 operator[] 를 준비해두어야 한다. 상수 객체가 생기는 경우는 (1) 상수 객체에 대한 포인터 (2) 상수 객체에 대한 참조자로 객체가 전달될 때이다.&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;div class=&quot;language-cpp highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;TextBlock&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+&lt;span class=&quot;nl&quot;&gt;public:&lt;/span&gt;
+        &lt;span class=&quot;p&quot;&gt;...&lt;/span&gt;
+        &lt;span class=&quot;kt&quot;&gt;char&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;amp;&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;operator&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[](&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;std&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;size_t&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;position&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;...&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;const&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;char&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;amp;&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;operator&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[](&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;std&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;size_t&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;position&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;const&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;...&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;nl&quot;&gt;private:&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;std&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;string&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;text&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;};&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;// 아래는 상수 객체가 사용되는 예&lt;/span&gt;
+
+&lt;span class=&quot;k&quot;&gt;const&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;TextBlock&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;ctb&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;World&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+&lt;span class=&quot;kt&quot;&gt;void&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;SomeFunction&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;const&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;TextBlock&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;amp;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;ctb&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;...&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;상수 멤버와 비상수 멤버가 기능적으로 서로 똑같게 구현되어 있을 때에는 코드 중복을 피하는 것이 좋은데, 이때 비상수 버전이 상수 버전을 호출하도록 해야 한다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;div class=&quot;language-cpp highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;TextBlock&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+&lt;span class=&quot;nl&quot;&gt;public:&lt;/span&gt;
+        &lt;span class=&quot;p&quot;&gt;...&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;const&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;char&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;amp;&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;operator&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[](&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;std&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;size_t&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;position&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;const&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;...&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+        &lt;span class=&quot;kt&quot;&gt;char&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;amp;&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;operator&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[](&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;std&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;size_t&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;position&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+        &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+                &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;const_cast&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;char&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;amp;&amp;gt;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;
+                                    &lt;span class=&quot;k&quot;&gt;static_cast&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;const&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;TextBlock&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;amp;&amp;gt;&lt;/span&gt;
+                                                  &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;position&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;])&lt;/span&gt;
+                                &lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+            &lt;span class=&quot;c1&quot;&gt;// (1) 비상수 객체를 상수 객체로 static_cast 한다.&lt;/span&gt;
+            &lt;span class=&quot;c1&quot;&gt;//     const를 붙이는 캐스팅은 안전한 타입 변환(비상수 -&amp;gt; 상수)을&lt;/span&gt;
+            &lt;span class=&quot;c1&quot;&gt;//         강제로 하는 것이므로 static_cast면 충분하다.&lt;/span&gt;
+            &lt;span class=&quot;c1&quot;&gt;// (2) cast된 상수 객체를 이용하여 const operator[]를 호출한다.&lt;/span&gt;
+            &lt;span class=&quot;c1&quot;&gt;// (3) return된 상수 참조자에서 const를 제거한다.&lt;/span&gt;
+        &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+        &lt;span class=&quot;p&quot;&gt;...&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;};&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;중요한 것은, 코드 중복을 피하기 위해 위와 같은 방식을 고려할 때 &lt;strong&gt;상수 멤버가 비상수 멤버를 호출하도록 해서는 안 된다&lt;/strong&gt;는 것이다. 비상수 함수 내부에서는 멤버의 내용을 수정하든 하지 않든 자유이므로 상수 함수를 불러 써도 아무런 문제가 되지 않지만, 상수 함수는 멤버의 내용을 수정하지 않기로 약속되어 있으므로 내부에서 비상수 함수를 불러 쓰는 것이 잘못된 방식인 것이다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;h3 id=&quot;reference&quot;&gt;Reference&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;스콧 마이어스 지음, 곽용재 옮김, “Effective C++,” 제3판.
+    &lt;ul&gt;
+      &lt;li&gt;항목 3: 낌새만 보이면 const를 들이대 보자!, 59.&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+</content>
+ </entry>
+ 
+ <entry>
+   <title>[C++] 복사 생성자와 복사 대입 연산자</title>
+   <link href="https://hyo-choi.github.io/study/study/cpp/2021/02/28/copy-constructor-and-assignment-operator/"/>
+   <updated>2021-02-28T00:00:00+09:00</updated>
+   <id>https://hyo-choi.github.io/study/study/cpp/2021/02/28/copy-constructor-and-assignment-operator</id>
+   <content type="html">&lt;p&gt;💡 &lt;strong&gt;기본적인 개념, 사용법에 대한 글이 아닙니다. Effective C++을 읽으며 기억해둘 만한 부분을 정리한 글입니다. 개념을 익힌 뒤 읽어보시면 좋습니다.&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;ul&gt;
+  &lt;li&gt;컴파일러는 경우에 따라 클래스에 대해 기본 생성자, 복사 생성자, 복사 대입 연산자, 소멸자를 암시적으로 만들 수 있다.&lt;/li&gt;
+  &lt;li&gt;어떤 시그니처를 가졌든 클래스 내부에 생성자를 직접 선언하면 컴파일러는 기본 생성자를 만들지 않는다. 따라서 기본 생성자가 필요 없다면 원하는 인자를 받는 생성자를 직접 만들어주기만 하면 된다.&lt;/li&gt;
+  &lt;li&gt;컴파일러가 암시적으로 만들어내는 복사 생성자 및 복사 대입 연산자는 &lt;strong&gt;아래&lt;/strong&gt;와 같은 경우 컴파일을 거부한다. 단순히 일괄 복사(대입) 처리 하는 것만으로는 해결할 수 없는 데이터 멤버가 있을 때, 암시적으로 만들어지는 복사 대입 연산자가 이런 경우의 처리 방법까지 판단하여 작업해야 할 이유가 없다. 따라서 해당 데이터 멤버에 대한 처리를 보류하고 컴파일 오류를 보여주는 것이라 보면 된다. 이런 경우 직접 복사 대입 연산자를 정의하고 사용해야 한다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;div class=&quot;language-cpp highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;NamedObject&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+&lt;span class=&quot;nl&quot;&gt;public:&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;NamedObject&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;std&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;string&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;amp;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;const&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;amp;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;value&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;...&lt;/span&gt;
+&lt;span class=&quot;nl&quot;&gt;private:&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;std&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;string&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;amp;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;nameValue&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;// 참조자의 참조 대상은 한 번 정해지면 바꿀 수 없다.&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;const&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;objectValue&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;// 상수 멤버의 값을 변경할 수 없다.&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;};&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;
+    &lt;p&gt;복사 대입 연산자를 private으로 선언한 기본 클래스로부터 상속받은 클래스의 경우, 파생 클래스는 암시적 복사 대입 연산자를 가질 수 없다. 파생 클래스가 기본 클래스의 복사 대입 연산자를 호출할 권한이 없기 때문이다.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;파생 클래스의 복사 생성자에서는 반드시 기본 클래스의 복사 생성자도 호출해준다. 주어진 객체의 모든 데이터 멤버 및 모든 기본 클래스 부분을 빠뜨리지 않고 복사해야 한다. 같은 이유로, 파생 클래스의 복사 대입 연산자에서는 반드시 기본 클래스의 복사 대입 연산자도 호출해준다.&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;div class=&quot;language-cpp highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;DerivedClass&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;BaseClass&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+&lt;span class=&quot;nl&quot;&gt;public:&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;...&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;DerivedClass&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;amp;&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;operator&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;const&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;DerivedClass&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;amp;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;rhs&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;this&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;!=&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;amp;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;rhs&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+        &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+            &lt;span class=&quot;n&quot;&gt;BaseClass&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;operator&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;rhs&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+                &lt;span class=&quot;c1&quot;&gt;// 기본 클래스 부분에 대한 대입 연산자를 반드시 호출한다.&lt;/span&gt;
+            &lt;span class=&quot;p&quot;&gt;...&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;// 이하 파생 클래스의 데이터 멤버 대입&lt;/span&gt;
+        &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;...&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;};&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;복사 생성자와 복사 대입 연산자가 서로를 사용하지 않도록 한다.
+    &lt;ul&gt;
+      &lt;li&gt;&lt;strong&gt;복사 대입 연산자에서 복사 생성자를 호출하는 경우&lt;/strong&gt;: 애초에 말도 안 되는 방식이니 상상도 하지 말자.&lt;/li&gt;
+      &lt;li&gt;&lt;strong&gt;복사 생성자에서 복사 대입 연산자를 호출하는 경우&lt;/strong&gt;: 생성자의 역할은 새로 만들어진 객체를 초기화하는 것, 대입 연산자의 역할은 ‘이미’ 초기화가 끝난 객체에 값을 주는 것. 초기화 되지 않은 객체에 값을 대입하는 연산자를 사용하지 않아야 한다.&lt;/li&gt;
+      &lt;li&gt;단, 복사 생성자와 복사 대입 연산자의 코드 본문이 비슷하다면 겹치는 부분을 별도의 private 멤버 함수로 분리해 만든 뒤 해당 함수를 호출하게 만든다. 이 방법은 안전할 뿐 아니라 검증된 방법이므로 코드 중복 제거를 위해 사용해봄직하다.&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;복사 대입 연산자가 &lt;strong&gt;자기대입에 대한 처리 및 예외에 대한 안전성&lt;/strong&gt;을 확보할 수 있도록 하는 방법이 있다. 자기대입은 흔히 일어나는 일이 아니므로 operator=가 호출될 때마다 일치성 검사를 수행하는 것 또한 비효율적인 동작이 된다. 따라서 아래처럼 operator=를 작성하면 자기대입에 대해 특별한 처리를 하지 않아도 되고, 예외 안전성까지 확보할 수 있다.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;div class=&quot;language-cpp highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c1&quot;&gt;// (1)&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;DerivedClass&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;amp;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;DerivedClass&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;operator&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;const&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;DerivedClass&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;amp;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;rhs&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;BaseClass&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;pOrig&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;p&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;      &lt;span class=&quot;c1&quot;&gt;// 원본 p의 포인터를 저장해둔다.&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;p&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;BaseClass&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;rhs&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;p&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;// rhs.p를 통해 BaseClass의 복사 생성자를 부른다.&lt;/span&gt;
+                                &lt;span class=&quot;c1&quot;&gt;// new에서 예외가 발생해도 원본 p는 무사하다.&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;delete&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;pOrig&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+
+    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;// (2) 복사 후 맞바꾸기 방법&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Widget&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;...&lt;/span&gt;
+    &lt;span class=&quot;kt&quot;&gt;void&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;swap&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Widget&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;amp;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;rhs&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;// *this의 데이터와 rhs의 데이터를 맞바꾸는 함수&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;...&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+
+&lt;span class=&quot;n&quot;&gt;Widget&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;amp;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Widget&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;operator&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;const&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Widget&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;amp;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;rhs&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;Widget&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;temp&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;rhs&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;  &lt;span class=&quot;c1&quot;&gt;// rhs의 데이터에 대한 사본을 만든다.&lt;/span&gt;
+    
+    &lt;span class=&quot;n&quot;&gt;swap&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;temp&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;        &lt;span class=&quot;c1&quot;&gt;// Widget::swap 함수를 통해 데이터를 바꾼다.&lt;/span&gt;
+                        &lt;span class=&quot;c1&quot;&gt;// temp는 지역 객체이므로 함수가 끝날 때 자동 소멸된다.&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;h3 id=&quot;reference&quot;&gt;Reference&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;스콧 마이어스 지음, 곽용재 옮김, “Effective C++,” 제3판.
+    &lt;ul&gt;
+      &lt;li&gt;항목 5: C++가 은근슬쩍 만들어 호출해 버리는 함수들에 촉각을 세우자, 81.&lt;/li&gt;
+      &lt;li&gt;항목 11: operator=에서는 자기대입에 대한 처리가 빠지지 않도록 하자, 106.&lt;/li&gt;
+      &lt;li&gt;항목 12: 객체의 모든 부분을 빠짐없이 복사하자, 111.&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+</content>
+ </entry>
+ 
+ <entry>
+   <title>[C] calloc의 c는 어떤 의미일까?</title>
+   <link href="https://hyo-choi.github.io/study/study/cpp/2021/02/25/what-is-first-c-in-calloc/"/>
+   <updated>2021-02-25T00:00:00+09:00</updated>
+   <id>https://hyo-choi.github.io/study/study/cpp/2021/02/25/what-is-first-c-in-calloc</id>
+   <content type="html">&lt;p&gt;사&lt;strong&gt;소&lt;/strong&gt;한 궁&lt;strong&gt;금&lt;/strong&gt;증 해결: 소금 시리즈&lt;/p&gt;
+
+&lt;h2 id=&quot;calloc의-c는-어떤-의미일까&quot;&gt;calloc의 c는 어떤 의미일까?&lt;/h2&gt;
+
+&lt;p&gt;malloc의 m이 memory라는 것은 알고 있었는데, 문득 calloc은 무슨 뜻인가 하는 궁금증이 생겨 검색해보았다.&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;strong&gt;[번역]&lt;/strong&gt;&lt;br /&gt;
+(원문: &lt;a href=&quot;https://stackoverflow.com/questions/31888422/what-does-the-first-c-stand-for-in-calloc&quot;&gt;https://stackoverflow.com/questions/31888422/what-does-the-first-c-stand-for-in-calloc&lt;/a&gt;)&lt;/p&gt;
+
+    &lt;p&gt;Linux System Programming(by Robert Love)에 따르면, calloc의 어원에 대한 공식 소스는 없습니다.&lt;/p&gt;
+
+    &lt;p&gt;———&lt;/p&gt;
+
+    &lt;p&gt;몇 가지 그럴듯한 후보들이 있는데:&lt;/p&gt;
+
+    &lt;ol&gt;
+      &lt;li&gt;Count or Counted
+  &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;calloc&lt;/code&gt;이 별도의 카운트 인자를 가지고 있기 때문에.&lt;/li&gt;
+      &lt;li&gt;Clear
+  &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;calloc&lt;/code&gt;이 반환된 메모리 덩어리가 깔끔해진 것을 보장하기 때문에.
+        &lt;ul&gt;
+          &lt;li&gt;&lt;a href=&quot;https://ko.wikipedia.org/wiki/%EB%B8%8C%EB%9D%BC%EC%9D%B4%EC%96%B8_%EC%BB%A4%EB%8B%88%ED%95%B8&quot;&gt;Brian Kernighan&lt;/a&gt;는 “c”가 clear의 약자라 생각한다고 알려져 있습니다(그 스스로 확신할 수 없다고는 인정했음에도).&lt;/li&gt;
+          &lt;li&gt;(원문 댓글 참조) 초기의 &lt;a href=&quot;https://github.com/dspinellis/unix-history-repo/blob/Research-V7/usr/src/libc/gen/calloc.c&quot;&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;calloc.c&lt;/code&gt;&lt;/a&gt; 는 소스 코드 주석에 clear라는 명확한 단어를 포함하고 있습니다(count나 다른 후보들에 대한 언급은 없습니다). &lt;a href=&quot;https://github.com/dspinellis/unix-history-repo/blob/Research-V7/usr/src/libc/gen/malloc.c&quot;&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;malloc.c&lt;/code&gt;&lt;/a&gt; 의 소스 코드 주석을 보면, &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;calloc&lt;/code&gt; 에 대해 언급하며 clear라는 단어가 다시 사용되고 있습니다.&lt;/li&gt;
+        &lt;/ul&gt;
+      &lt;/li&gt;
+      &lt;li&gt;C 언어의 C
+        &lt;ul&gt;
+          &lt;li&gt;(&lt;a href=&quot;https://stackoverflow.com/questions/31888422/what-does-the-first-c-stand-for-in-calloc/31906184#31906184&quot;&gt;alk의 답변&lt;/a&gt; 및 댓글 참조) 같은 시기에 소개된 함수들에 대한 명명 규칙일 가능성이 있습니다.&lt;/li&gt;
+        &lt;/ul&gt;
+      &lt;/li&gt;
+    &lt;/ol&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;라고 한다. 다른 의견들도 해당 글에 많이 달려있으니 다른 의견이나 추가 정보가 필요하면 읽어볼 수 있겠다. 내 생각에는 clear나 C 언어 그 자체를 의미한다는 것이 꽤 신빙성 있는 것 같다.&lt;/p&gt;
+</content>
+ </entry>
+ 
+ <entry>
+   <title>블록체인과 암호화폐</title>
+   <link href="https://hyo-choi.github.io/study/study/etc/2021/02/07/blockchain-and-crypto-currency/"/>
+   <updated>2021-02-07T00:00:00+09:00</updated>
+   <id>https://hyo-choi.github.io/study/study/etc/2021/02/07/blockchain-and-crypto-currency</id>
+   <content type="html">&lt;p&gt;블록체인, 비트코인, 가상화폐, 암호화폐……. 말은 많이 들어봤지만 자극적인 뉴스로만 접하게 된다는 점에서 거리감이 느껴져 크게 관심갖지 않았던 분야였다.&lt;/p&gt;
+
+&lt;p&gt;그런데, 그러던 중 노마드 코더의 &lt;strong&gt;‘비트코인 떡상을 보고 개발자가 느낀 것’&lt;/strong&gt; (&lt;a href=&quot;https://www.youtube.com/watch?v=TljQRfHRId8&quot;&gt;https://www.youtube.com/watch?v=TljQRfHRId8&lt;/a&gt;) 영상을 보았다. 영상을 보고 나니, 비트코인으로 뭔가를 할 생각이 없더라도 개발자라면 이 ‘코드로 만들어진 것’의 정체를 알고는 있는 게 맞겠다 싶더라. 비트코인은 자극적이지만 블록체인 == 비트코인이 아니기도 하고…. 그래서 영상에서 언급된 개념들에 관한 레퍼런스를 찾아 읽고 간단히 정리해보았다.&lt;/p&gt;
+
+&lt;p&gt;💡 &lt;strong&gt;투자와 관련된 글이 아닙니다! 요약본은 내용을 제대로 이해했는지 정리하는 차원에서 쓴 글이니, 가급적 원문을 읽어주세요.&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;h3 id=&quot;블록체인&quot;&gt;블록체인&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;strong&gt;블록체인 개념 완벽 정리&lt;/strong&gt;
+&lt;a href=&quot;https://www.banksalad.com/contents/%EB%B8%94%EB%A1%9D%EC%B2%B4%EC%9D%B8-%EA%B0%9C%EB%85%90-%EC%99%84%EB%B2%BD-%EC%A0%95%EB%A6%AC-dh1do&quot;&gt;https://www.banksalad.com/contents/블록체인-개념-완벽-정리-dh1do&lt;/a&gt;&lt;/p&gt;
+
+    &lt;ul&gt;
+      &lt;li&gt;
+        &lt;p&gt;&lt;strong&gt;요약&lt;/strong&gt;&lt;/p&gt;
+
+        &lt;p&gt;블록체인은 &lt;strong&gt;데이터 분산 처리 기술&lt;/strong&gt;이다. 블록체인의 ‘블록’은 개인 간 거래(P2P)의 데이터를 기록하는 &lt;strong&gt;장부&lt;/strong&gt;라고 볼 수 있고, ‘체인’은 시간의 흐름에 따라 블록들이 형성하게 되는 구조를 의미한다. 블록이 체인의 형태로 나타나기 때문에 ‘블록체인’이라고 이름 붙였다고 한다. (&lt;a href=&quot;https://medium.com/@yeon22/blockchain-%EB%B8%94%EB%A1%9D%EC%B2%B4%EC%9D%B8%EC%9D%B4%EB%9E%80-%EB%AC%B4%EC%97%87%EC%9D%B8%EA%B0%80-1123c58d7056&quot;&gt;‘체인’에 대한 부가 설명 링크&lt;/a&gt;)&lt;/p&gt;
+
+        &lt;p&gt;네트워크에 참여하는 모든 사용자가 모든 데이터를 분산, 저장하고 있기 때문에 특정 데이터를 확인하기 위해서는 모든 블록을 대조-확인할 필요가 있다. 따라서 은행과 같이 중앙 관리자와 공적 인증이 필요한 기존 체계와 다르게, 블록체인은 다수가 데이터를 증명하므로 중앙 관리자가 필요없고 데이터 위·변조에 강하다는 특징을 가지고 있다. (사실상 해킹이 불가능한 수준이라고.)&lt;/p&gt;
+
+        &lt;p&gt;&lt;strong&gt;비트코인&lt;/strong&gt;과 같은 암호화폐는 블록체인의 이러한 특징 덕분에 등장하게 되었는데, 화폐 발행에 이를 인증해줄 중앙 은행의 역할이 필요하지 않기 때문이다. 실제로 블록체인 기술은 화폐 수요자가 직접 ‘채굴’을 통해 화폐를 발행하고 유통하는 것을 가능케 하고 있다.&lt;/p&gt;
+      &lt;/li&gt;
+      &lt;li&gt;단, &lt;a href=&quot;https://www.banksalad.com/contents/%EA%B0%80%EC%83%81%ED%99%94%ED%8F%90-%EA%B0%9C%EB%85%90-%EC%99%84%EB%B2%BD-%EC%A0%95%EB%A6%AC-A-to-Z-2%EB%B6%80-DqzUZ&quot;&gt;이 글&lt;/a&gt;을 보면 블록체인이 해킹당한 역사는 없으나 거래소의 허술한 보안 관리로 인한 해킹 사례는 몇 차례 있었다고 한다. 아무리 원본 기술이 좋아도 그 외적인 부분에서 발생하는 이슈에 늘 신경써야 하겠다.&lt;/li&gt;
+      &lt;li&gt;위에서 밑줄 친 ‘P2P 데이터’는 정확히는 트랜잭션 단위라는 것 같다. 블록은 블록에 대한 정보(프로그램 버전, 해시값 등)를 가진 ‘헤더’와 트랜잭션으로 이루어진 ‘바디’로 구성되어있다.
+  (참고 링크) &lt;a href=&quot;https://mommoo.tistory.com/62&quot;&gt;트랜잭션이란?&lt;/a&gt; → &lt;a href=&quot;https://medium.com/@yeon22/crypto-%ED%95%B4%EC%8B%9C-hash-%EB%9E%80-6962be197523&quot;&gt;해시란?&lt;/a&gt; → &lt;a href=&quot;https://medium.com/@kimjunyong/%EB%B8%94%EB%A1%9D%EC%B2%B4%EC%9D%B8%EC%9D%98-%EC%A0%95%EC%9D%98%EC%99%80-%EA%B8%B0%EC%88%A0-%EB%B9%84%EC%A0%84%EA%B3%B5%EC%9E%90%EB%8F%84-%EC%9D%B4%ED%95%B4%ED%95%98%EB%8A%94-%EA%B8%B0%EB%B3%B8%EC%A0%81-%EC%9D%B4%ED%95%B4-6706ebb43009&quot;&gt;블록체인의 기술적 설명&lt;/a&gt;&lt;/li&gt;
+      &lt;li&gt;아무튼…… 그렇다면 ‘채굴’은 무엇인가? 👇&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;strong&gt;가상화폐 개념 완벽 정리 A to Z - 1부&lt;/strong&gt;
+&lt;a href=&quot;https://www.banksalad.com/contents/가상화폐-개념-완벽-정리-A-to-Z-1부-WYTtp&quot;&gt;https://www.banksalad.com/contents/가상화폐-개념-완벽-정리-A-to-Z-1부-WYTtp&lt;/a&gt;&lt;/p&gt;
+
+    &lt;ul&gt;
+      &lt;li&gt;
+        &lt;p&gt;&lt;strong&gt;요약:&lt;/strong&gt; 암호화 방식으로 가장 대표적인 POW(Proof Of Work: 작업 증명 방식)를 통한 예시&lt;/p&gt;
+
+        &lt;p&gt;POW는 그래픽 카드로 연산 처리를 수행하여 비트코인의 암호화 수준을 높인다. 이 과정을 비유적으로 ‘&lt;strong&gt;채굴&lt;/strong&gt;(mining)’이라고 칭하며, 채굴을 통해 암호화 수준 상승에 가장 먼저 기여한 특정 개인에게 가상 화폐를 지급하며 화폐의 가치를 보장한다. 이 때 지급되는 가상 화폐는 가상 화폐 거래시 발생하는 수수료를 취합한 것이다. 이러한 과정을 통해 암호화 수준이 높아지고 → 이로 인해 채굴량이 점차 감소함에 따라 → 비트코인의 희소성이 높아지므로 → 가치가 상승하게 된다.&lt;/p&gt;
+      &lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;기업용 블록체인 오픈소스(&lt;a href=&quot;https://itbj.tistory.com/16&quot;&gt;https://itbj.tistory.com/16&lt;/a&gt;)를 통해 블록체인이 어떻게 구현되는지 살펴볼 수 있다. 인프런에는 &lt;a href=&quot;https://www.inflearn.com/course/%ED%81%B4%EB%A0%88%EC%9D%B4%ED%8A%BC/dashboard&quot;&gt;이런 강좌&lt;/a&gt;나 &lt;a href=&quot;https://www.inflearn.com/course/ethereum-solidity-%ED%88%AC%ED%91%9C-dapp/dashboard&quot;&gt;이런 강좌&lt;/a&gt;도 있어 추후 수강해볼 계획이다.&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;h3 id=&quot;decentralization-탈중앙화&quot;&gt;Decentralization (탈중앙화)&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;
+    &lt;p&gt;위 항목을 보면 블록체인 자체가 탈중앙화를 지향하는 기술이라는 것을 쉽게 눈치챌 수 있다. 그렇다면 탈중앙화는 정확히 어떤 의미를 가지고, 그 장점은 무엇일까?&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;strong&gt;탈중앙화란 무엇인가 - 비탈릭 부테린 by HASHED&lt;/strong&gt;
+&lt;a href=&quot;https://link.medium.com/SvmYqwl3beb&quot;&gt;https://link.medium.com/SvmYqwl3beb&lt;/a&gt;&lt;/p&gt;
+
+    &lt;ul&gt;
+      &lt;li&gt;
+        &lt;p&gt;&lt;strong&gt;요약&lt;/strong&gt;&lt;/p&gt;
+
+        &lt;p&gt;(탈)중앙화는 구조적, 정치적, 논리적 (탈)중앙화의 세 가지 축으로 나눌 수 있다. 사람들이 탈중앙화에 대해 이야기할 때 보통 이 세 가지 축을 혼용하기 때문에 혼동이 생긴다고 한다. 따라서 탈중앙화를 이야기할 때에는 이 세 가지를 각각 고려하는 편이 좋겠다.&lt;/p&gt;
+
+        &lt;blockquote&gt;
+          &lt;p&gt;&lt;strong&gt;구조적 (탈)중앙화&lt;/strong&gt; : 실제로 몇 대의 컴퓨터가 하나의 시스템을 구축하고 있는가? 어떤 시점에서든 시스템이 몇 대의 컴퓨터가 고장나는 것까지 견뎌낼 수 있는가?&lt;br /&gt;
+  &lt;strong&gt;정치적 (탈)중앙화&lt;/strong&gt; : 실제로 몇 명의 주체(혹은 기관)들이 시스템을 이루는 컴퓨터들을 통제하고 있는가?&lt;br /&gt;
+  &lt;strong&gt;논리적 (탈)중앙화&lt;/strong&gt; : 시스템의 인터페이스와 데이터 구조가 하나의 획일적인 구조인가, 아니면 전체 모양을 알기 힘든 벌 떼처럼 보이는가? 예를들어 시스템의 운영자와 사용자를 모두 포함시킨 채로 시스템을 절반으로 가른다면, 각각의 반쪽짜리들이 독립적으로 실행될 수 있는가?&lt;/p&gt;
+        &lt;/blockquote&gt;
+
+        &lt;p&gt;블록체인은 구조적, 정치적으로는 탈중앙화 되어있지만 논리적으로는 중앙화 되어있다. 탈중앙화가 필요한 세 가지 이유는 아래와 같다.&lt;/p&gt;
+
+        &lt;blockquote&gt;
+          &lt;p&gt;&lt;strong&gt;장애 허용성(Fault tolerance)&lt;/strong&gt; : 탈중앙화된 시스템은 많은 수의 독립된 요소들로 이루어져 있기 때문에, 사고로 전체 시스템에 장애가 일어날 확률이 낮다.&lt;br /&gt;
+  &lt;strong&gt;공격 저항성(Attack resistance)&lt;/strong&gt; : 탈중앙화된 시스템에는 중앙화되어 있는 급소가 없기 때문에, 시스템을 공격하거나 조작하는데 드는 비용이 매우 높다.&lt;br /&gt;
+  &lt;strong&gt;담합 저항성(Collusion resistance)&lt;/strong&gt; : 탈중앙화된 시스템 내의 사용자들은 다른 사용자들에게 피해를 끼쳐서 자신의 이득을 취하는 행위를 하기 어렵다. 반면 중앙화된 기업이나 정부의 리더들은 결속력이 비교적 약한 시민, 소비자, 직원들을 착취해서 이득을 얻는 경우가 많다.&lt;/p&gt;
+        &lt;/blockquote&gt;
+      &lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;strong&gt;탈중앙화의 진짜 의미 by 김경진&lt;/strong&gt;
+&lt;a href=&quot;https://link.medium.com/nDLbttn2beb&quot;&gt;https://link.medium.com/nDLbttn2beb&lt;/a&gt;&lt;/p&gt;
+
+    &lt;ul&gt;
+      &lt;li&gt;
+        &lt;p&gt;&lt;strong&gt;요약&lt;/strong&gt;&lt;/p&gt;
+
+        &lt;blockquote&gt;
+          &lt;p&gt;어떤 네트워크 내에서 일어난 사건에 대한 사실과 의사결정에 관련된 합의를 중앙의 권위있는 집단으로부터 네트워크 내 다수에게 분산시키거나 위임하는 프로세스&lt;/p&gt;
+        &lt;/blockquote&gt;
+
+        &lt;p&gt;블록체인으로 시작된 흐름은 합의 프로세스를 탈중앙화하려는 움직임이다. 합의는 크게 ‘사실에 대한 합의(Consensus)’와 ‘결정에 대한 합의(Governance)’로 구분될 수 있으며, 탈중앙화를 지향하는 프로젝트는 흔히 이 두 가지를 모두 고민하게 된다. 사실에 대한 합의가 없는 상태에서의 결정에 대한 합의는 무의미하다. 블록체인과 탈중앙화 기술은 이 두가지 합의에 대한 비용을 유의미한 수준으로 낮춰주며, 중앙화를 통해 얻는 신뢰성을 위한 추가비용, 리스크 비용 등을 고려하면 탈중앙화 시스템이 상대적으로 저렴해지기도 한다.&lt;/p&gt;
+      &lt;/li&gt;
+      &lt;li&gt;
+        &lt;p&gt;원문 초반에 ‘탈중앙화가 ICO 마케팅을 위한 세일즈 단어일 뿐이라는 주장’이 있다는 이야기를 보고 ICO에 대해서도 찾아보았다. ‘암호화폐를 처음 내놓을 때 암호화 토큰을 일정 수 판매, 혹은 다른 코인을 통해 교환하는 것’을 의미하는 것 같다. 이 부분은 따로 정리하는 대신 링크로 대체. (&lt;a href=&quot;https://steemit.com/ico/@shiningmoon1969/ico&quot;&gt;https://steemit.com/ico/@shiningmoon1969/ico&lt;/a&gt;) 유사 개념으로 블록체인과는 크게 상관 없지만 &lt;a href=&quot;https://steemit.com/kr/@protraveler/ipo-ipo&quot;&gt;IPO&lt;/a&gt;라는 것도 있다. 유사하긴 하지만 ICO는 IPO와 다르다!&lt;/p&gt;
+      &lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;h3 id=&quot;consensus-mechanism-합의-메커니즘&quot;&gt;Consensus mechanism (합의 메커니즘)&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;
+    &lt;p&gt;탈중앙화는 다양한 접근법을 가지고 있으며, 구성원간의 합의를 통해 이루어진다는 것을 알 수 있었다. 그렇다면 실제 블록체인 기술에서 합의란 어떻게 정의되며 그러한 합의를 어떻게 이끌어내는가?&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;strong&gt;블록체인 합의 알고리즘이란 무엇인가요?&lt;/strong&gt;
+&lt;a href=&quot;https://academy.binance.com/ko/articles/what-is-a-blockchain-consensus-algorithm&quot;&gt;https://academy.binance.com/ko/articles/what-is-a-blockchain-consensus-algorithm&lt;/a&gt;&lt;/p&gt;
+
+    &lt;ul&gt;
+      &lt;li&gt;
+        &lt;p&gt;&lt;strong&gt;요약&lt;/strong&gt;&lt;/p&gt;
+
+        &lt;p&gt;합의 알고리즘은 분산화된 시스템의 무결성과 보안을 유지시키는 역할을 한다. 퍼블릭 블록체인은 중앙의 권위체에게 의존하지 않기 때문에 각 노드에서 트랜잭션의 유효성에 대한 합의가 필요하다. 합의 알고리즘은 프로토콜 규칙이 준수되고 있는지 확인하며, 모든 트랜잭션이 신뢰할 수 있는 방식으로 진행된다는 사실을 보장한다.&lt;/p&gt;
+
+        &lt;p&gt;프로토콜과 합의 알고리즘은 같은 의미로 사용되기 쉽지만 완전히 같은 개념은 아니다. 프로토콜이 블록체인의 규칙 그 자체(방법, 조건 등을 정의)라면, 합의 알고리즘은 그 규칙에 따라 시스템에 절차를 지시하는 역할(실제 환경에서 검증, 승인, 실행)을 한다. 따라서 비트코인과 이더리움은 프로토콜, 작업 증명과 지분 증명은 합의 알고리즘이라 할 수 있다.&lt;/p&gt;
+      &lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;합의 알고리즘(합의 메카니즘, 합의 모델, 합의 방식 등으로도 불림)은 여러 방법론을 카테고리로 묶은 포괄적인 개념이다. 대표적인 합의 알고리즘으로는 작업 증명과 지분 증명이 있는데, 이 방법들이 어떻게 합의를 이끌어내는지는 각 항목에서 확인하도록 하자.&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;h3 id=&quot;proof-of-work-작업증명&quot;&gt;Proof of work (작업증명)&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;strong&gt;블록체인 코어 시리즈: 작업증명(PoW)&lt;/strong&gt;
+&lt;a href=&quot;https://medium.com/dnext-post/blockchain-core-series-pow-61227506a8c7&quot;&gt;https://medium.com/dnext-post/blockchain-core-series-pow-61227506a8c7&lt;/a&gt;&lt;br /&gt;
+  작업증명이 실제 기술적으로 어떻게 일어나는가에 대한 설명&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;strong&gt;PoW 를 통한 비잔틴 오류 허용 (비잔틴 장군 문제) 해결 과정&lt;/strong&gt;
+&lt;a href=&quot;https://goodjoon.tistory.com/256&quot;&gt;https://goodjoon.tistory.com/256&lt;/a&gt;&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;strong&gt;작업 증명(PoW)&lt;/strong&gt;
+&lt;a href=&quot;https://academy.binance.com/ko/articles/proof-of-work-explained&quot;&gt;https://academy.binance.com/ko/articles/proof-of-work-explained&lt;/a&gt;&lt;/p&gt;
+
+    &lt;ul&gt;
+      &lt;li&gt;
+        &lt;p&gt;&lt;strong&gt;요약&lt;/strong&gt;&lt;/p&gt;
+
+        &lt;p&gt;작업 증명 자체는 블록체인 기술을 위해 새로 등장한 개념이 아니다. 스팸과 같은 어뷰징을 막기 위해 서비스 사용자들에게 일정량의 작업(일반적으로 컴퓨터의 프로세싱 타임)을 요구하는 방식으로 &lt;a href=&quot;http://wiki.hash.kr/index.php/%EC%9E%91%EC%97%85%EC%A6%9D%EB%AA%85&quot;&gt;1993년에 처음 고안되고 1997년에 처음 사용&lt;/a&gt;되었다. 그것이 2009년 비트코인에 합의 알고리즘으로 도입된 것이다.&lt;/p&gt;
+
+        &lt;p&gt;작업 증명 방식을 사용하면 악의를 가진 사용자가 네트워크를 공격하여 얻을 수 있는 잠재적 이익보다 공격을 위한 비용이 더 커진다. 이러한 점이 공격의 메리트를 없애므로 네트워크를 보호할 수 있다. 다만 마이닝을 위해 고성능 하드웨어가 필요하며 상당한 전력이 소모된다는 점, 복잡한 알고리즘 계산이 네트워크의 보안을 보장하는 대신 그 이상으로 활용될 수 없다는 점을 단점으로 꼽을 수 있다.&lt;/p&gt;
+      &lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;h3 id=&quot;proof-of-stake-지분증명&quot;&gt;Proof of stake (지분증명)&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;strong&gt;지분 증명(PoS)&lt;/strong&gt;
+&lt;a href=&quot;https://academy.binance.com/ko/articles/proof-of-stake-explained&quot;&gt;https://academy.binance.com/ko/articles/proof-of-stake-explained&lt;/a&gt;&lt;/p&gt;
+
+    &lt;ul&gt;
+      &lt;li&gt;
+        &lt;p&gt;&lt;strong&gt;요약&lt;/strong&gt;&lt;/p&gt;
+
+        &lt;p&gt;지분 증명에서 블록들은 ‘채굴’되기보다는 ‘형성’된다고 말한다. 지분 증명을 사용하는 암호 화폐는 보통 ‘사전 채굴된 코인은 판매하는 방식으로 시작’했거나 ‘작업 증명으로 시작했다가 지분 증명으로 전환’된 것들이다. (이더리움이 이렇게 지분 증명 방식으로 전환할 예정이라고 한다. &lt;a href=&quot;https://zdnet.co.kr/view/?no=20201220181142&quot;&gt;기사 링크&lt;/a&gt;) 작업 증명은 채굴에 대한 보상으로 더 많은 암호화폐를 생성하는 반면, 지분 증명은 보통 트랜잭션 수수료를 보상으로 한다.&lt;/p&gt;
+
+        &lt;p&gt;형성 과정에 참여하고자 한다면 네트워크 상에 있는 일정량의 코인을 자신의 지분으로 스테이킹(staking)해야 한다. 더 많은 지분을 가질 수록 다음 블록의 검증자 노드로 선정될 확률이 높아진다. 한 노드가 다음 블록을 형성하도록 선택되면, 해당 노드는 블록 안의 트랜잭션의 유효성 검증을 거친 뒤 그 블록에 서명하고 이를 블록체인에 포함시킨다. 노드에게는 이에 대한 보상으로 블록 내부 트랜잭션과 관련된 수수료가 지급된다. 가장 부유한 노드만이 선택되는 것을 방지하기 위한 전략 또한 존재한다.&lt;/p&gt;
+
+        &lt;p&gt;네트워크가 잘못된 트랜잭션을 발견한다면 형성자 노드는 지분의 일부를 잃게 되고 향후 형성자로 참여할 수 없게 된다. 따라서 지분은 형성자 노드가 잘못된 트랜잭션을 발생시키지 않도록 하는 경제적 동기가 된다. 또한 공격을 위해 51%의 지분을 차지하는 것도 암호 화폐의 가격에 따라 비현실적이므로 보안성을 가진다.&lt;/p&gt;
+
+        &lt;p&gt;지분 증명은 &lt;strong&gt;자격 증명에 비해&lt;/strong&gt; 에너지 효율이 좋고, 노드 운영은 채굴에 비해 쉽고 저렴하므로 많은 유저들의 참여를 통해 네트워크의 탈중앙화에 기여한다. 또, 보상으로 코인을 지급하는 방식이 아니므로 자격 증명을 사용하는 암호 화폐에 비해 코인의 가격이 비교적 안정적으로 유지된다.&lt;/p&gt;
+      &lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;dl&gt;
+      &lt;dt&gt;&lt;strong&gt;블록체인 코어 시리즈: 지분증명(PoS) Part I&lt;/strong&gt;&lt;/dt&gt;
+      &lt;dt&gt;&lt;a href=&quot;https://medium.com/dnext-post/blockchain-core-series-pos-a596284ddeee&quot;&gt;https://medium.com/dnext-post/blockchain-core-series-pos-a596284ddeee&lt;/a&gt;&lt;/dt&gt;
+      &lt;dd&gt;
+        &lt;p&gt;지분증명과 작업증명의 비교, 그리고 지분증명이 실제 기술적으로 어떻게 일어나는가에 대한 설명&lt;/p&gt;
+      &lt;/dd&gt;
+    &lt;/dl&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;br /&gt;
+이만하면 중요한 내용들을 이어지는 흐름으로 얼추 다 살펴본 것 같다. 그러면 영상에서 언급되었던 나머지 개념들에 대해서도 살펴보겠다.&lt;/p&gt;
+
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;h3 id=&quot;사이드-체인&quot;&gt;사이드 체인&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;
+    &lt;p&gt;사이드 체인 - 해시넷
+&lt;a href=&quot;http://wiki.hash.kr/index.php/%EC%82%AC%EC%9D%B4%EB%93%9C%EC%B2%B4%EC%9D%B8&quot;&gt;http://wiki.hash.kr/index.php/사이드체인&lt;/a&gt;&lt;/p&gt;
+
+    &lt;blockquote&gt;
+      &lt;p&gt;사이드체인은 서로 다른 블록체인들 위에 존재하는 자산들을 쉽게 거래할 수 있도록 하는 기술이다. (중략) 메인체인에 있는 자산을 사이드체인으로 옮겨 트랜잭션을 처리한다. 사이드체인에서 트랜잭션이 모두 끝나면 다시 중요한 정보만이 메인체인에 남게된다. 즉, 메인체인에서 모든 트랜잭션을 처리하는 것이 아니라 사이드체인이 메인체인이 할 일을 나누어 도와주는 것이라고 할 수 있다.&lt;/p&gt;
+    &lt;/blockquote&gt;
+
+    &lt;blockquote&gt;
+      &lt;p&gt;사이드체인은 섬처럼 별개로 떨어져 존재하는 다른 블록체인 간에 다리를 놓는 기술로서 세컨드 레이어, 오프체인 솔루션을 포괄한다. 비트코인, 이더리움 등의 블록체인이 같은 사이드체인 기술을 통해 연결되면 둘은 사이드체인 관계에 있다고 표현한다.&lt;/p&gt;
+    &lt;/blockquote&gt;
+
+    &lt;ul&gt;
+      &lt;li&gt;사이드 체인은 (1) 서로 다른 블록체인 간의 다리 역할을 해주기도 하고, (2) 퍼블릭 블록체인에서 노드의 수가 많아질수록 TPS(Transaction Per Second)가 떨어지고 수수료가 상승하는 현상을 해결하기 위해 메인 체인이 해야 할 트랜잭션을 나누어 처리해주는 기술이라고 생각하면 될 것 같다. 단, 가치의 생성 자체는 메인 체인이 맡고 있으므로 자산을 생성하는 등의 중요한 역할은 모두 메인 체인이 맡는다.&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;h3 id=&quot;스마트-컨트랙&quot;&gt;스마트 컨트랙&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;
+    &lt;p&gt;스마트 계약 - 해시넷
+&lt;a href=&quot;http://wiki.hash.kr/index.php/%EC%8A%A4%EB%A7%88%ED%8A%B8_%EA%B3%84%EC%95%BD&quot;&gt;http://wiki.hash.kr/index.php/스마트_계약&lt;/a&gt;&lt;/p&gt;
+
+    &lt;blockquote&gt;
+      &lt;p&gt;스마트 계약 또는 스마트 컨트랙트(smart contract)는 계약 당사자가 사전에 협의한 내용을 미리 프로그래밍하여 전자 계약서 문서 안에 넣어두고, 이 계약 조건이 모두 충족되면 자동으로 계약 내용이 실행되도록 하는 시스템이다. 기존의 블록체인 1.0 기술이 ‘과거에 일어났던 일’을 기록한다면, 스마트 계약 기능을 구현한 블록체인 2.0 기술은 ‘미래에 일어날 일’을 미리 기록해 둘 수 있다.&lt;/p&gt;
+    &lt;/blockquote&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;h3 id=&quot;nft-non-fungible-token&quot;&gt;NFT (Non Fungible Token)&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;
+    &lt;p&gt;대체불가토큰 - 해시넷
+&lt;a href=&quot;http://wiki.hash.kr/index.php/%EB%8C%80%EC%B2%B4%EB%B6%88%EA%B0%80%ED%86%A0%ED%81%B0&quot;&gt;http://wiki.hash.kr/index.php/대체불가토큰&lt;/a&gt;&lt;/p&gt;
+
+    &lt;blockquote&gt;
+      &lt;p&gt;대체불가토큰은 각각의 고유한 가치를 가지고 있는 토큰으로서 각 토큰간의 호환이 불가능하다. 블록체인에서 대체불가토큰은 주로 티켓, 부동산, 소득권, &lt;a href=&quot;http://wiki.hash.kr/index.php/%ED%81%AC%EB%A6%BD%ED%86%A0%ED%82%A4%ED%8B%B0&quot;&gt;크립토키티&lt;/a&gt;, 쿠폰 등에 사용되며 고유한 번호의 자산이나 이익을 가지고 있다.&lt;/p&gt;
+    &lt;/blockquote&gt;
+
+    &lt;blockquote&gt;
+      &lt;p&gt;대체 가능이라는 의미는 쉽게 동일한 것으로 대체가 될 수 있음을 의미한다. 그러나 대체불가라는 각각이 고유한 정보 또는 특성을 갖게 되어 서로 교환을 할 수 없는 것을 뜻한다. 현존하는 많은 토큰들은 대체 가능 특성에 따라 이루어진다. 구체적으로, 각 토큰이 10달러짜리 지폐라고 생각해 본다면 누군가에게 토큰을 보내고 일주일 후에 다른 토큰을 얻은 경우, 토큰은 동일하다. 그러나 대체불가토큰 일 경우 가 토큰은 독특한 정보와 다양한 수준의 희귀성을 가지고 있게 된다. 따라서 다른 토큰을 받았다고 하여도 처음에 보낸 토큰과 같을 수 없다는 것을 의미한다.&lt;/p&gt;
+    &lt;/blockquote&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;br /&gt;
+여기까지!&lt;/p&gt;
+
+&lt;p&gt;영상에서 언급된 개념과 관련된 부분은 다 정리한 것 같다. 정리하면서 새로운 개념들을 많이 접했고, 덕분에 앞으로 블록체인과 관련된 글을 마주쳤을 때 천장을 보고 뒤로가기를 누르는 대신 한 번 읽어볼 생각 정도는 들 것 같다. 암호화폐가 자극적인 뉴스로 보도되는 것은 암호화폐 그 자체의 문제가 아니라 암호화폐의 소유자들이 암호화폐를 어떻게 사용하고 바라보는지의 문제인 듯하다. 확실히 블록체인은 잘만 사용하면 정말 많은 일을 할 수 있을 것 같다. 이게 내 길이라는 생각은 들지 않더라도, 개발자라면 꾸준히 관심을 가지고 지켜봐야 할 분야임은 확실할 것이다.&lt;/p&gt;
+</content>
+ </entry>
+ 
+
+</feed>

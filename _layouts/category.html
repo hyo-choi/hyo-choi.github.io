@@ -1,0 +1,22 @@
+---
+layout: default
+---
+<div class="posts">
+	<ul class="posts-list" style="list-style-type: none; padding-left: 0;">
+
+		{% assign category = page.category | default: page.title %}
+		{% for post in site.categories[category] %}
+		<div class="post">
+			<li style="list-style-type: none;">
+				<h3 class="post-title">
+					<a href="{{ site.baseurl }}{{ post.url }}">
+						{{ post.title }}
+					</a>
+				</h3>
+				<span class="post-date">{{ post.date | date_to_string }}</span>
+			</li>
+		</div>
+		{% endfor %}
+
+</div>
+</ul>

@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en-us">
+
+  <head>
+  <link href="http://gmpg.org/xfn/11" rel="profile">
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+
+  <title>
+    
+    [C++] 상수 멤버와 비상수 멤버 &middot; hyo-choi
+    
+  </title>
+
+  
+  <link rel="canonical" href="https://hyo-choi.github.io/study/study/cpp/2021/03/01/const-and-non-const-member/">
+  
+  <link rel="preconnect" href="https://fonts.gstatic.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://hyo-choi.github.io/public/css/poole.css">
+  <link rel="stylesheet" href="https://hyo-choi.github.io/public/css/syntax.css">
+  <link rel="stylesheet" href="https://hyo-choi.github.io/public/css/lanyon.css">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=PT+Serif:400,400italic,700%7CPT+Sans:400">
+
+  <link rel="apple-touch-icon-precomposed" sizes="144x144"
+    href="https://hyo-choi.github.io/public/apple-touch-icon-precomposed.png">
+  <link rel="shortcut icon" href="https://hyo-choi.github.io/public/favicon.ico">
+
+  <link rel="alternate" type="application/rss+xml" title="RSS" href="https://hyo-choi.github.io/atom.xml">
+
+  
+</head>
+
+
+  <body class="theme-base-0d sidebar-overlay">
+
+    <!-- Target for toggling the sidebar `.sidebar-checkbox` is for regular
+     styles, `#sidebar-checkbox` for behavior. -->
+<input type="checkbox" class="sidebar-checkbox" id="sidebar-checkbox">
+
+<!-- Toggleable sidebar -->
+<div class="sidebar" id="sidebar">
+
+  <nav class="sidebar-nav">
+    <a class="sidebar-nav-item" href="https://hyo-choi.github.io/">Home</a>
+
+    
+
+    <div class="site-category">
+      <li style="list-style:none;" class="sidebar-nav-item"><a href="/PROJECTS">#PROJECTS</a>
+        <ul style="padding-left: 15px;">
+          <li style="list-style:none;"><a href="/PROJECTS/to-do-list">to-do list</a></li>
+        </ul>
+      </li>
+
+      <li style="list-style:none;" class="sidebar-nav-item"><a href="/STUDY">#STUDY</a>
+        <ul style="padding-left: 15px;">
+          <li style="list-style:none;"><a href="/STUDY/CPP">C++</a></li>
+          <li style="list-style:none;"><a href="/STUDY/HTML">HTML</a></li>
+          <li style="list-style:none;"><a href="/STUDY/CSS">CSS</a></li>
+          <li style="list-style:none;"><a href="/STUDY/Javascript">Javascript</a></li>
+          <li style="list-style:none;"><a href="/STUDY/Unity">Unity</a></li>
+          <li style="list-style:none;"><a href="/STUDY/Etc">Etc</a></li>
+        </ul>
+      </li>
+    </div>
+
+    <a class="sidebar-nav-item" href="https://github.com/hyo-choi" target="_blank">GitHub</a>
+  </nav>
+
+  <div class="sidebar-item">
+    <p>
+      &copy; 2021. All rights reserved.
+    </p>
+  </div>
+</div>
+
+
+    <!-- Wrap is the content to shift when toggling the sidebar. We wrap the
+         content to avoid any CSS collisions with our real content. -->
+    <div class="wrap">
+      <div class="masthead">
+        <div class="container">
+          <h3 class="masthead-title">
+            <a href="/" title="Home">hyo-choi</a>
+            <small>공부하는 블로그</small>
+          </h3>
+        </div>
+      </div>
+
+      <div class="container content">
+        <div class="post">
+  <h1 class="post-title">[C++] 상수 멤버와 비상수 멤버</h1>
+  <span class="post-date">01 Mar 2021</span>
+  <p>💡 <strong>기본적인 개념, 사용법에 대한 글이 아닙니다. Effective C++을 읽으며 기억해둘 만한 부분을 정리한 글입니다. 개념을 익힌 뒤 읽어보시면 좋습니다.</strong></p>
+
+<p><br /></p>
+<ul>
+  <li>
+    <p><strong>용어 정의</strong></p>
+
+    <ul>
+      <li><strong>비상수 멤버</strong>: const 키워드가 없는 일반 멤버</li>
+      <li><strong>상수 멤버</strong>: (이 글 한정) 비상수 멤버와 기능상 차이 없이 const 키워드만 붙어 있는 멤버</li>
+    </ul>
+  </li>
+  <li>
+    <p>함수의 선언에서 const 키워드가 있고 없고의 차이만 있는 함수들은 오버로딩이 된다.</p>
+  </li>
+  <li>
+    <p>예를 들어 operator[] 를 지원하는 클래스의 경우 상수 객체가 생성될 가능성이 있으므로 아래와 같이 두 종류의 operator[] 를 준비해두어야 한다. 상수 객체가 생기는 경우는 (1) 상수 객체에 대한 포인터 (2) 상수 객체에 대한 참조자로 객체가 전달될 때이다.</p>
+  </li>
+</ul>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">class</span> <span class="nc">TextBlock</span> <span class="p">{</span>
+<span class="nl">public:</span>
+        <span class="p">...</span>
+        <span class="kt">char</span><span class="o">&amp;</span> <span class="k">operator</span><span class="p">[](</span><span class="n">std</span><span class="o">::</span><span class="kt">size_t</span> <span class="n">position</span><span class="p">)</span> <span class="p">{</span> <span class="p">...</span> <span class="p">}</span>
+        <span class="k">const</span> <span class="kt">char</span><span class="o">&amp;</span> <span class="k">operator</span><span class="p">[](</span><span class="n">std</span><span class="o">::</span><span class="kt">size_t</span> <span class="n">position</span><span class="p">)</span> <span class="k">const</span> <span class="p">{</span> <span class="p">...</span> <span class="p">}</span>
+<span class="nl">private:</span>
+        <span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="n">text</span><span class="p">;</span>
+<span class="p">};</span>
+
+<span class="c1">// 아래는 상수 객체가 사용되는 예</span>
+
+<span class="k">const</span> <span class="n">TextBlock</span> <span class="nf">ctb</span><span class="p">(</span><span class="s">"World"</span><span class="p">);</span>
+<span class="kt">void</span> <span class="nf">SomeFunction</span><span class="p">(</span><span class="k">const</span> <span class="n">TextBlock</span><span class="o">&amp;</span> <span class="n">ctb</span><span class="p">)</span> <span class="p">{</span> <span class="p">...</span> <span class="p">}</span>
+</code></pre></div></div>
+
+<ul>
+  <li>상수 멤버와 비상수 멤버가 기능적으로 서로 똑같게 구현되어 있을 때에는 코드 중복을 피하는 것이 좋은데, 이때 비상수 버전이 상수 버전을 호출하도록 해야 한다.</li>
+</ul>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">class</span> <span class="nc">TextBlock</span> <span class="p">{</span>
+<span class="nl">public:</span>
+        <span class="p">...</span>
+        <span class="k">const</span> <span class="kt">char</span><span class="o">&amp;</span> <span class="k">operator</span><span class="p">[](</span><span class="n">std</span><span class="o">::</span><span class="kt">size_t</span> <span class="n">position</span><span class="p">)</span> <span class="k">const</span> <span class="p">{</span> <span class="p">...</span> <span class="p">}</span>
+        <span class="kt">char</span><span class="o">&amp;</span> <span class="k">operator</span><span class="p">[](</span><span class="n">std</span><span class="o">::</span><span class="kt">size_t</span> <span class="n">position</span><span class="p">)</span>
+        <span class="p">{</span>
+                <span class="k">return</span> <span class="p">(</span> <span class="k">const_cast</span><span class="o">&lt;</span><span class="kt">char</span><span class="o">&amp;&gt;</span><span class="p">(</span>
+                                    <span class="k">static_cast</span><span class="o">&lt;</span><span class="k">const</span> <span class="n">TextBlock</span><span class="o">&amp;&gt;</span>
+                                                  <span class="p">(</span><span class="o">*</span><span class="k">this</span><span class="p">)[</span><span class="n">position</span><span class="p">])</span>
+                                <span class="p">);</span>
+            <span class="c1">// (1) 비상수 객체를 상수 객체로 static_cast 한다.</span>
+            <span class="c1">//     const를 붙이는 캐스팅은 안전한 타입 변환(비상수 -&gt; 상수)을</span>
+            <span class="c1">//         강제로 하는 것이므로 static_cast면 충분하다.</span>
+            <span class="c1">// (2) cast된 상수 객체를 이용하여 const operator[]를 호출한다.</span>
+            <span class="c1">// (3) return된 상수 참조자에서 const를 제거한다.</span>
+        <span class="p">}</span>
+        <span class="p">...</span>
+<span class="p">};</span>
+</code></pre></div></div>
+
+<ul>
+  <li>중요한 것은, 코드 중복을 피하기 위해 위와 같은 방식을 고려할 때 <strong>상수 멤버가 비상수 멤버를 호출하도록 해서는 안 된다</strong>는 것이다. 비상수 함수 내부에서는 멤버의 내용을 수정하든 하지 않든 자유이므로 상수 함수를 불러 써도 아무런 문제가 되지 않지만, 상수 함수는 멤버의 내용을 수정하지 않기로 약속되어 있으므로 내부에서 비상수 함수를 불러 쓰는 것이 잘못된 방식인 것이다.</li>
+</ul>
+
+<p><br /></p>
+<h3 id="reference">Reference</h3>
+
+<ul>
+  <li>스콧 마이어스 지음, 곽용재 옮김, “Effective C++,” 제3판.
+    <ul>
+      <li>항목 3: 낌새만 보이면 const를 들이대 보자!, 59.</li>
+    </ul>
+  </li>
+</ul>
+
+</div>
+
+
+<div class="related">
+  <h2>Related posts</h2>
+  <ul class="related-posts">
+    
+    <li>
+      <h3>
+        <a href="/study/study/cpp/2021/03/08/CPP-RAII-class/">
+          [C++] 자원 관리 클래스
+          <small>08 Mar 2021</small>
+        </a>
+      </h3>
+    </li>
+    
+    <li>
+      <h3>
+        <a href="/study/study/unity/2021/03/04/how-to-keep-BGM-and-UI/">
+          [Unity] 씬 전환시 BGM과 UI 유지하기
+          <small>04 Mar 2021</small>
+        </a>
+      </h3>
+    </li>
+    
+    <li>
+      <h3>
+        <a href="/study/study/css/2021/03/04/linear-gradient-and-body-problem/">
+          [CSS] linear-gradient와 body 적용시 문제 해결
+          <small>04 Mar 2021</small>
+        </a>
+      </h3>
+    </li>
+    
+  </ul>
+</div>
+
+
+      </div>
+    </div>
+
+    <label for="sidebar-checkbox" class="sidebar-toggle"></label>
+
+    <script src='/public/js/script.js'></script>
+  </body>
+</html>

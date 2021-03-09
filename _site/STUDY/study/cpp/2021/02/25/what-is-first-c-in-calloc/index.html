@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en-us">
+
+  <head>
+  <link href="http://gmpg.org/xfn/11" rel="profile">
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+
+  <title>
+    
+    [C] calloc의 c는 어떤 의미일까? &middot; hyo-choi
+    
+  </title>
+
+  
+  <link rel="canonical" href="https://hyo-choi.github.io/study/study/cpp/2021/02/25/what-is-first-c-in-calloc/">
+  
+  <link rel="preconnect" href="https://fonts.gstatic.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://hyo-choi.github.io/public/css/poole.css">
+  <link rel="stylesheet" href="https://hyo-choi.github.io/public/css/syntax.css">
+  <link rel="stylesheet" href="https://hyo-choi.github.io/public/css/lanyon.css">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=PT+Serif:400,400italic,700%7CPT+Sans:400">
+
+  <link rel="apple-touch-icon-precomposed" sizes="144x144"
+    href="https://hyo-choi.github.io/public/apple-touch-icon-precomposed.png">
+  <link rel="shortcut icon" href="https://hyo-choi.github.io/public/favicon.ico">
+
+  <link rel="alternate" type="application/rss+xml" title="RSS" href="https://hyo-choi.github.io/atom.xml">
+
+  
+</head>
+
+
+  <body class="theme-base-0d sidebar-overlay">
+
+    <!-- Target for toggling the sidebar `.sidebar-checkbox` is for regular
+     styles, `#sidebar-checkbox` for behavior. -->
+<input type="checkbox" class="sidebar-checkbox" id="sidebar-checkbox">
+
+<!-- Toggleable sidebar -->
+<div class="sidebar" id="sidebar">
+
+  <nav class="sidebar-nav">
+    <a class="sidebar-nav-item" href="https://hyo-choi.github.io/">Home</a>
+
+    
+
+    <div class="site-category">
+      <li style="list-style:none;" class="sidebar-nav-item"><a href="/PROJECTS">#PROJECTS</a>
+        <ul style="padding-left: 15px;">
+          <li style="list-style:none;"><a href="/PROJECTS/to-do-list">to-do list</a></li>
+        </ul>
+      </li>
+
+      <li style="list-style:none;" class="sidebar-nav-item"><a href="/STUDY">#STUDY</a>
+        <ul style="padding-left: 15px;">
+          <li style="list-style:none;"><a href="/STUDY/CPP">C++</a></li>
+          <li style="list-style:none;"><a href="/STUDY/HTML">HTML</a></li>
+          <li style="list-style:none;"><a href="/STUDY/CSS">CSS</a></li>
+          <li style="list-style:none;"><a href="/STUDY/Javascript">Javascript</a></li>
+          <li style="list-style:none;"><a href="/STUDY/Unity">Unity</a></li>
+          <li style="list-style:none;"><a href="/STUDY/Etc">Etc</a></li>
+        </ul>
+      </li>
+    </div>
+
+    <a class="sidebar-nav-item" href="https://github.com/hyo-choi" target="_blank">GitHub</a>
+  </nav>
+
+  <div class="sidebar-item">
+    <p>
+      &copy; 2021. All rights reserved.
+    </p>
+  </div>
+</div>
+
+
+    <!-- Wrap is the content to shift when toggling the sidebar. We wrap the
+         content to avoid any CSS collisions with our real content. -->
+    <div class="wrap">
+      <div class="masthead">
+        <div class="container">
+          <h3 class="masthead-title">
+            <a href="/" title="Home">hyo-choi</a>
+            <small>공부하는 블로그</small>
+          </h3>
+        </div>
+      </div>
+
+      <div class="container content">
+        <div class="post">
+  <h1 class="post-title">[C] calloc의 c는 어떤 의미일까?</h1>
+  <span class="post-date">25 Feb 2021</span>
+  <p>사<strong>소</strong>한 궁<strong>금</strong>증 해결: 소금 시리즈</p>
+
+<h2 id="calloc의-c는-어떤-의미일까">calloc의 c는 어떤 의미일까?</h2>
+
+<p>malloc의 m이 memory라는 것은 알고 있었는데, 문득 calloc은 무슨 뜻인가 하는 궁금증이 생겨 검색해보았다.</p>
+
+<ul>
+  <li>
+    <p><strong>[번역]</strong><br />
+(원문: <a href="https://stackoverflow.com/questions/31888422/what-does-the-first-c-stand-for-in-calloc">https://stackoverflow.com/questions/31888422/what-does-the-first-c-stand-for-in-calloc</a>)</p>
+
+    <p>Linux System Programming(by Robert Love)에 따르면, calloc의 어원에 대한 공식 소스는 없습니다.</p>
+
+    <p>———</p>
+
+    <p>몇 가지 그럴듯한 후보들이 있는데:</p>
+
+    <ol>
+      <li>Count or Counted
+  <code class="language-plaintext highlighter-rouge">calloc</code>이 별도의 카운트 인자를 가지고 있기 때문에.</li>
+      <li>Clear
+  <code class="language-plaintext highlighter-rouge">calloc</code>이 반환된 메모리 덩어리가 깔끔해진 것을 보장하기 때문에.
+        <ul>
+          <li><a href="https://ko.wikipedia.org/wiki/%EB%B8%8C%EB%9D%BC%EC%9D%B4%EC%96%B8_%EC%BB%A4%EB%8B%88%ED%95%B8">Brian Kernighan</a>는 “c”가 clear의 약자라 생각한다고 알려져 있습니다(그 스스로 확신할 수 없다고는 인정했음에도).</li>
+          <li>(원문 댓글 참조) 초기의 <a href="https://github.com/dspinellis/unix-history-repo/blob/Research-V7/usr/src/libc/gen/calloc.c"><code class="language-plaintext highlighter-rouge">calloc.c</code></a> 는 소스 코드 주석에 clear라는 명확한 단어를 포함하고 있습니다(count나 다른 후보들에 대한 언급은 없습니다). <a href="https://github.com/dspinellis/unix-history-repo/blob/Research-V7/usr/src/libc/gen/malloc.c"><code class="language-plaintext highlighter-rouge">malloc.c</code></a> 의 소스 코드 주석을 보면, <code class="language-plaintext highlighter-rouge">calloc</code> 에 대해 언급하며 clear라는 단어가 다시 사용되고 있습니다.</li>
+        </ul>
+      </li>
+      <li>C 언어의 C
+        <ul>
+          <li>(<a href="https://stackoverflow.com/questions/31888422/what-does-the-first-c-stand-for-in-calloc/31906184#31906184">alk의 답변</a> 및 댓글 참조) 같은 시기에 소개된 함수들에 대한 명명 규칙일 가능성이 있습니다.</li>
+        </ul>
+      </li>
+    </ol>
+  </li>
+</ul>
+
+<p>라고 한다. 다른 의견들도 해당 글에 많이 달려있으니 다른 의견이나 추가 정보가 필요하면 읽어볼 수 있겠다. 내 생각에는 clear나 C 언어 그 자체를 의미한다는 것이 꽤 신빙성 있는 것 같다.</p>
+
+</div>
+
+
+<div class="related">
+  <h2>Related posts</h2>
+  <ul class="related-posts">
+    
+    <li>
+      <h3>
+        <a href="/study/study/cpp/2021/03/08/CPP-RAII-class/">
+          [C++] 자원 관리 클래스
+          <small>08 Mar 2021</small>
+        </a>
+      </h3>
+    </li>
+    
+    <li>
+      <h3>
+        <a href="/study/study/unity/2021/03/04/how-to-keep-BGM-and-UI/">
+          [Unity] 씬 전환시 BGM과 UI 유지하기
+          <small>04 Mar 2021</small>
+        </a>
+      </h3>
+    </li>
+    
+    <li>
+      <h3>
+        <a href="/study/study/css/2021/03/04/linear-gradient-and-body-problem/">
+          [CSS] linear-gradient와 body 적용시 문제 해결
+          <small>04 Mar 2021</small>
+        </a>
+      </h3>
+    </li>
+    
+  </ul>
+</div>
+
+
+      </div>
+    </div>
+
+    <label for="sidebar-checkbox" class="sidebar-toggle"></label>
+
+    <script src='/public/js/script.js'></script>
+  </body>
+</html>

@@ -1,4 +1,0 @@
-User-agent: *
-Allow: /
-
-Sitemap: http://hyo-choi.github.io/sitemap.xml

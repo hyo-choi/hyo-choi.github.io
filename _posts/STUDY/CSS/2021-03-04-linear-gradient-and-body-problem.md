@@ -3,6 +3,7 @@ layout: post
 title: "[CSS] linear-gradient와 body 적용시 문제 해결"
 categories: [STUDY, STUDY/CSS]
 tags: [CSS]
+comment: true
 ---
 
 사이드 프로젝트를 진행하려는데 배경에 이미지를 넣기는 싫고, 그렇다고 단색을 깔면 너무 밋밋해서 배경에 그라데이션을 넣을 수 있는 방법을 찾아보았다. 그런데 body에 linear-gradient를 적용하니 의도한대로 적용되지 않았다. 아래에 linear-gradient에 대한 간단한 소개와 body 적용시의 문제 해결법을 작성해보았다.

@@ -3,6 +3,7 @@ layout: post
 title: "[Unity] 씬 전환시 BGM과 UI 유지하기"
 categories: [STUDY, STUDY/Unity]
 tags: [Unity]
+comment: true
 ---
 
 유튜브에서 유니티 튜토리얼을 따라하며 공부하다가 BGM을 추가해보고 싶어졌다. 그런데 GameObject로 BGMManager를 각 씬에 넣어줬더니 BGM이 이어지지 않고 씬마다 각각 재생되었다. 같은 BGM을 샘플 게임 내내 유지하고 싶었기 때문에 해결 방법을 찾아보았다.

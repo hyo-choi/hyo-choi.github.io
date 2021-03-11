@@ -3,6 +3,7 @@ layout: post
 title: "[to-do list] 계획"
 categories: [PROJECTS, PROJECTS/to-do-list]
 tags: [to-do-list]
+comment: true
 ---
 
 생활코딩에서 HTML과 CSS를 맛보기로 공부한 뒤 노마드 코더의 [바닐라 JS로 크롬 앱 만들기](https://nomadcoders.co/javascript-for-beginners/lobby)를 완강했다. ([완성본 github repo](https://github.com/hyo-choi/myMomontom)) ([완성본 페이지 링크](https://hyo-choi.github.io/myMomontom/)) 날씨 기능은 현재 상태에서 굳이 넣을 필요를 느끼지 못해서 구현을 생략하였고, to-do list를 리셋하는 기능과 이름을 재설정하는 기능은 추가로 넣어본 부분이다.

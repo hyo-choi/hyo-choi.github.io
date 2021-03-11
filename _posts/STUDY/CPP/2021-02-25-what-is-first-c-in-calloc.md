@@ -3,6 +3,7 @@ layout: post
 title: "[C] calloc의 c는 어떤 의미일까?"
 categories: [STUDY, STUDY/CPP]
 tags: [C]
+comment: true
 ---
 
 사**소**한 궁**금**증 해결: 소금 시리즈

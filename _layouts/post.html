@@ -7,7 +7,12 @@ layout: default
   <span class="post-date">{{ page.date | date_to_string }}</span>
   {{ content }}
 </div>
-
+{% if page.comment %}
+<script src="https://utteranc.es/client.js" repo="hyo-choi/blog-comments" issue-term="title" theme="github-light"
+  crossorigin="anonymous" async>
+  </script>
+<p></p>
+{% endif %}
 {% if site.related_posts.size >= 1 %}
 <div class="related">
   <h2>Related posts</h2>

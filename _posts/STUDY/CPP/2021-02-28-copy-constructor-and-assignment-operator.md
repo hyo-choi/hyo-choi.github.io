@@ -3,6 +3,7 @@ layout: post
 title: "[C++] 복사 생성자와 복사 대입 연산자"
 categories: [STUDY, STUDY/CPP]
 tags: [C++, Effective C++]
+comment: true
 ---
 💡 **기본적인 개념, 사용법에 대한 글이 아닙니다. Effective C++을 읽으며 기억해둘 만한 부분을 정리한 글입니다. 개념을 익힌 뒤 읽어보시면 좋습니다.**
 

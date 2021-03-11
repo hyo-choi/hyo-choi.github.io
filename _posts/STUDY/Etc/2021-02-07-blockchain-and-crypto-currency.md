@@ -3,6 +3,7 @@ layout: post
 title: "블록체인과 암호화폐"
 categories: [STUDY, STUDY/Etc]
 tags: [Blockchain, Cryptocurrency]
+comment: true
 ---
 
 블록체인, 비트코인, 가상화폐, 암호화폐……. 말은 많이 들어봤지만 자극적인 뉴스로만 접하게 된다는 점에서 거리감이 느껴져 크게 관심갖지 않았던 분야였다.

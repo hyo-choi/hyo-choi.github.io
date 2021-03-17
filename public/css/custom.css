@@ -1,0 +1,38 @@
+.toc-block {
+	width: 15em;
+	position:fixed;
+	top: 5em;
+	right: 2em;
+	z-index: 999;
+}
+
+.toc-block a {
+	opacity: 60%;
+	transition: 0.1s ease-in-out;
+}
+
+.toc-block a:hover {
+	opacity: 100%;
+	text-decoration: none;
+}
+
+.toc-block ul {
+	list-style-type: none;
+}
+
+.toc-block > ul {
+	list-style-type: none;
+	padding-left: 0;
+}
+
+@media(max-width:75em) {
+	.toc-block {
+		z-index: inherit;
+		position: inherit;
+		width: auto;
+	}
+	
+	.toc-block a {
+		opacity: 100%;
+	}
+}

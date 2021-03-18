@@ -36,3 +36,21 @@
 		opacity: 100%;
 	}
 }
+
+.scroll-top {
+	display: block;
+	width: 30px;
+	height: 30px;
+	background-color: #6aa0b5;
+	color:white;
+    position:fixed;
+	z-index: 9;
+	bottom: 1.5em;
+	right: 2em;
+	border-radius: 15px;
+	text-align: center;
+}
+
+.scroll-top:hover {
+	text-decoration: none;
+}

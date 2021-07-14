@@ -1,7 +1,7 @@
 ---
 layout: post
 title: "[Unity] 씬 전환시 BGM과 UI 유지하기"
-categories: [STUDY, STUDY/Unity]
+categories: [STUDY, STUDY/Etc]
 tags: [Unity]
 comment: true
 ---

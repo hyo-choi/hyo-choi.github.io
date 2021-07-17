@@ -1,6 +1,6 @@
 ---
 layout: post
-title: "[TIL] 2021/07/15"
+title: "[TIL] 제너레이터, 브라우저 환경에서의 JS"
 categories: [TIL]
 tags: [TIL, JavaScript, CORS]
 comment: true
@@ -10,11 +10,11 @@ comment: true
 
 2021/07/15
 
+<br>
+
 # 제너레이터
 
 [이곳](https://ko.javascript.info/generators)을 참고하여 공부하였다.
-
-<br>
 
 ## 제너레이터
 

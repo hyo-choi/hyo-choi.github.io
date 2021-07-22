@@ -1,6 +1,6 @@
 ---
 layout: post
-title: "[TIL] 2021/07/22"
+title: "[TIL] API Endpoint, OAuth 2.0, React Hooks"
 categories: [TIL]
 tags: [TIL, API, OAuth 2.0, React, Webpack, React Hooks]
 comment: true

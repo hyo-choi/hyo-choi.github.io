@@ -337,6 +337,7 @@ tbody tr:nth-child(odd) th {
 }
 .page-title,
 .post-title {
+  margin-bottom: .5rem;
   margin-top: 0;
 }
 

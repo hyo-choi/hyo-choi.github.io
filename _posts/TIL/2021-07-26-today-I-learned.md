@@ -1,3 +1,12 @@
+---
+layout: post
+title: "[TIL] React Code Splitting, Socket.IO, UI/UX"
+categories: [TIL]
+tags: [TIL, React, Code Splitting, Socket.IO, UI/UX]
+comment: true
+---
+
+
 # Today I Learned
 
 2021/07/26

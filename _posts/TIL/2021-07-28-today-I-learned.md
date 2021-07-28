@@ -41,9 +41,9 @@ vanilla JS 프로젝트에서는 build 폴더에 있는 .js 파일을 html에 �
 
 [지난번](https://hyo-choi.github.io/til/2021/07/25/today-I-learned/)에 튜토리얼에 소개된 API만 살펴보고 [공식 문서](https://reactrouter.com/web/guides/quick-start)를 살펴보지 않았기에 API 문서만 간단하게 다시 살펴보았다. 
 
-### <Router>
+### `<Router>`
 
-[<Router>는 다섯 종류](https://reactrouter.com/core/api/Router)가 있는데, `[<BrowserRouter>](https://reactrouter.com/web/api/BrowserRouter)`는 말 그대로 브라우저 환경에서, `[<NativeRouter>](https://reactrouter.com/native/api/NativeRouter)` 는 Native(mobile App) 환경에서 사용하는 기본 라우터이고, `[<MemoryRouter>](https://reactrouter.com/core/api/MemoryRouter)`와 `[<StaticRouter>](https://reactrouter.com/core/api/StaticRouter)` 는 React-router 코어에 속해있어 각각 브라우저가 아닌 환경(마찬가지로 native 용도인 듯), SSR 환경에서 사용할 수 있다. `[<HashRouter>](https://reactrouter.com/web/api/HashRouter)`는 legacy 브라우저를 지원하기 위한 라우터로 가능하면 사용하지 않고 `<BrowserRouter>`를 사용하는 것을 권장한다고 한다.
+[`<Router>`는 다섯 종류](https://reactrouter.com/core/api/Router)가 있는데, [`<BrowserRouter>`](https://reactrouter.com/web/api/BrowserRouter)는 말 그대로 브라우저 환경에서, [`<NativeRouter>`](https://reactrouter.com/native/api/NativeRouter) 는 Native(mobile App) 환경에서 사용하는 기본 라우터이고, [`<MemoryRouter>`](https://reactrouter.com/core/api/MemoryRouter)와 [`<StaticRouter>`](https://reactrouter.com/core/api/StaticRouter) 는 React-router 코어에 속해있어 각각 브라우저가 아닌 환경(마찬가지로 native 용도인 듯), SSR 환경에서 사용할 수 있다. [`<HashRouter>`](https://reactrouter.com/web/api/HashRouter)는 legacy 브라우저를 지원하기 위한 라우터로 가능하면 사용하지 않고 `<BrowserRouter>`를 사용하는 것을 권장한다고 한다.
 
 ### [useRouteMatch](https://reactrouter.com/web/api/Hooks/useroutematch)
 
@@ -69,11 +69,11 @@ history 자체는 [HTML5 명세에 포함되어있는 웹 API](https://developer
 
     push를 사용하면 현재 페이지가 이력에 남고, replace를 사용하면 이력에 남지 않는다.
 
-### [<Prompt>](https://reactrouter.com/core/api/Prompt)
+### [`<Prompt>`](https://reactrouter.com/core/api/Prompt)
 
 `<Prompt>`를 사용하면 사용자가 페이지를 떠나려 할 때 Prompt를 띄울 수 있다. `when` 속성(boolean)을 통해 conditional prevent도 가능하다.
 
-### [<Redirect>](https://reactrouter.com/web/api/Redirect)
+### [`<Redirect>`](https://reactrouter.com/web/api/Redirect)
 
 `<Redirect>`를 렌더링하면 history stack의 현재 location을 덮어쓰고 다른 location으로 redirect할 수 있다. `push` 속성(boolean)을 사용하면 현재 location을 덮어쓰는 대신 history.push처럼 동작하도록 할 수도 있고, 이외에 `exact`, `strict`, `sensitive` 옵션 등도 가지고 있다.
 

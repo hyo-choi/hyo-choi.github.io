@@ -1,6 +1,6 @@
 ---
 layout: post
-title: "[TIL] React, React-router, CSR과 SSR"
+title: "[TIL] 8월 2주차 스프린트 회고"
 categories: [TIL]
 tags: [TIL, React, axios, Agile, scrum, HTTP, CORS]
 comment: true
